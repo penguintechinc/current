@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  shorturl:
+    build: ./shorturl-app
+    container_name: shorturl-app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "9443:9443"
+    environment:
+      - DB_TYPE=${DB_TYPE:-sqlite}
+      - DB_CONNECTION=${DB_CONNECTION:-/var/data/current/db.sqlite}
+      - DOMAIN=${DOMAIN:-localhost}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@localhost}
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - REDIS_URL=redis://redis:6379/0
+      - RATE_LIMIT_PER_SECOND=${RATE_LIMIT_PER_SECOND:-10}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/var/data/current
+      - ./logs:/var/log/shorturl
+      - ./letsencrypt:/etc/letsencrypt
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - shorturl-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: shorturl-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - shorturl-network
+
+volumes:
+  redis-data:
+
+networks:
+  shorturl-network:
+    driver: bridge
