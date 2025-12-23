@@ -29,7 +29,12 @@ def create_app(config_class: type = Config) -> Flask:
 
     # Initialize database
     with app.app_context():
+        # Create PyDAL folder for metadata files
+        import pathlib
+        pathlib.Path('/tmp/pydal').mkdir(parents=True, exist_ok=True)
+
         init_db(app)
+        _create_default_admin(app)
 
     # Initialize services
     _init_services(app)
@@ -120,6 +125,38 @@ def _init_redis(app: Flask) -> None:
         if not hasattr(app, "extensions"):
             app.extensions = {}
         app.extensions["redis"] = None
+
+
+def _create_default_admin(app: Flask) -> None:
+    """Create default admin user if it doesn't exist.
+
+    Args:
+        app: Flask application instance.
+    """
+    from .models import get_user_by_email, create_user
+    from .auth.core import hash_password
+
+    admin_email = os.environ.get("DEFAULT_ADMIN_EMAIL", "admin@example.com")
+    admin_password = os.environ.get("DEFAULT_ADMIN_PASSWORD", "admin123")
+
+    # Check if admin user already exists
+    existing_user = get_user_by_email(admin_email)
+    if existing_user:
+        app.logger.info(f"Admin user {admin_email} already exists")
+        return
+
+    # Create admin user
+    try:
+        password_hash = hash_password(admin_password)
+        create_user(
+            email=admin_email,
+            password_hash=password_hash,
+            full_name="Administrator",
+            role="admin"
+        )
+        app.logger.info(f"Created default admin user: {admin_email}")
+    except Exception as e:
+        app.logger.error(f"Failed to create default admin user: {e}")
 
 
 def _init_services(app: Flask) -> None:

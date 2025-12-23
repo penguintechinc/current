@@ -39,9 +39,10 @@ def init_db(app: Flask) -> DAL:
 
     db = DAL(
         db_uri,
+        folder='/tmp/pydal',  # Writable folder for metadata files
         pool_size=Config.DB_POOL_SIZE,
         migrate=True,
-        check_reserved=["all"],
+        check_reserved=[],  # Disabled reserved keyword checking
         lazy_tables=False,
     )
 
@@ -78,21 +79,22 @@ def init_db(app: Flask) -> DAL:
     # =========================================================================
 
     # Domains - Short domain registry (e.g., "short.io", "link.co")
-    db.define_table(
-        "domains",
-        Field("domain", "string", length=255, unique=True, requires=[
-            IS_NOT_EMPTY(error_message="Domain is required"),
-            IS_MATCH(r"^[a-zA-Z0-9][a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}$",
-                     error_message="Invalid domain format"),
-        ]),
-        Field("is_primary", "boolean", default=False),
-        Field("is_active", "boolean", default=True),
-        Field("ssl_enabled", "boolean", default=True),
-        Field("verification_code", "string", length=64),
-        Field("verified_at", "datetime"),
-        Field("created_at", "datetime", default=datetime.utcnow),
-        Field("updated_at", "datetime", default=datetime.utcnow, update=datetime.utcnow),
-    )
+    if "domains" not in db.tables:
+        db.define_table(
+            "domains",
+            Field("domain", "string", length=255, unique=True, requires=[
+                IS_NOT_EMPTY(error_message="Domain is required"),
+                IS_MATCH(r"^[a-zA-Z0-9][a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}$",
+                         error_message="Invalid domain format"),
+            ]),
+            Field("is_primary", "boolean", default=False),
+            Field("is_active", "boolean", default=True),
+            Field("ssl_enabled", "boolean", default=True),
+            Field("verification_code", "string", length=64),
+            Field("verified_at", "datetime"),
+            Field("created_at", "datetime", default=datetime.utcnow),
+            Field("updated_at", "datetime", default=datetime.utcnow, update=datetime.utcnow),
+        )
 
     # Teams - Workspaces/organizations for URL management
     db.define_table(

@@ -107,3 +107,7 @@ def admin_required(f: Callable) -> Callable:
 def maintainer_or_admin_required(f: Callable) -> Callable:
     """Decorator to require maintainer or admin role."""
     return role_required("admin", "maintainer")(f)
+
+
+# Alias for backward compatibility with existing route files
+token_required = auth_required

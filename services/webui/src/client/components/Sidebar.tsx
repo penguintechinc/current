@@ -58,8 +58,22 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     >
       {/* Header */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-dark-700">
-        {!collapsed && (
-          <span className="text-xl font-bold text-gold-gradient">WebUI</span>
+        {!collapsed ? (
+          <Link to="/" className="flex-1">
+            <img
+              src="/assets/logo.png"
+              alt="Current Logo"
+              className="w-[180px] h-auto"
+            />
+          </Link>
+        ) : (
+          <Link to="/" className="flex-1 flex justify-center">
+            <img
+              src="/assets/logo.png"
+              alt="Current"
+              className="w-8 h-auto"
+            />
+          </Link>
         )}
         <button
           onClick={onToggle}

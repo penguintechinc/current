@@ -4,14 +4,12 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: project-template-postgres
+    container_name: current-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-app_db}
       POSTGRES_USER: ${POSTGRES_USER:-app_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -26,10 +24,8 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: project-template-redis
+    container_name: current-redis
     command: redis-server --requirepass ${REDIS_PASSWORD:-password} --appendonly yes
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -46,7 +42,7 @@ services:
     build:
       context: ./services/flask-backend
       dockerfile: Dockerfile
-    container_name: project-template-flask
+    container_name: current-flask
     environment:
       - FLASK_ENV=${FLASK_ENV:-production}
       - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
@@ -61,14 +57,14 @@ services:
       - DEFAULT_ADMIN_EMAIL=${DEFAULT_ADMIN_EMAIL:-admin@example.com}
       - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD:-admin123}
     ports:
-      - "${FLASK_PORT:-5000}:5000"
+      - "${FLASK_PORT:-8000}:5000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/healthz"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/healthz')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -81,17 +77,17 @@ services:
     build:
       context: ./services/webui
       dockerfile: Dockerfile
-    container_name: project-template-webui
+    container_name: current-webui
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=3000
       - FLASK_API_URL=http://flask-backend:5000
     ports:
-      - "${WEBUI_PORT:-3000}:3000"
+      - "${WEBUI_PORT:-3005}:3000"
     depends_on:
       - flask-backend
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/healthz"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/healthz', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -99,42 +95,20 @@ services:
     networks:
       - app-network
 
-  # Prometheus Monitoring
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: project-template-prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=200h'
-      - '--web.enable-lifecycle'
-    ports:
-      - "${PROMETHEUS_PORT:-9090}:9090"
-    volumes:
-      - ./infrastructure/monitoring/prometheus:/etc/prometheus
-      - prometheus_data:/prometheus
-    networks:
-      - app-network
-    restart: unless-stopped
-
   # Grafana Dashboard
   grafana:
     image: grafana/grafana:latest
-    container_name: project-template-grafana
+    container_name: current-grafana
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
     ports:
-      - "${GRAFANA_PORT:-3001}:3000"
+      - "${GRAFANA_PORT:-3004}:3000"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./infrastructure/monitoring/grafana/provisioning:/etc/grafana/provisioning
       - ./infrastructure/monitoring/grafana/dashboards:/var/lib/grafana/dashboards
-    depends_on:
-      - prometheus
     networks:
       - app-network
     restart: unless-stopped
@@ -142,7 +116,7 @@ services:
   # Nginx Reverse Proxy (optional - for production)
   nginx:
     image: nginx:alpine
-    container_name: project-template-nginx
+    container_name: current-nginx
     ports:
       - "${NGINX_HTTP_PORT:-80}:80"
       - "${NGINX_HTTPS_PORT:-443}:443"
@@ -164,8 +138,6 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
-    driver: local
-  prometheus_data:
     driver: local
   grafana_data:
     driver: local
