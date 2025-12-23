@@ -33,9 +33,6 @@ app.get('/readyz', (_req: Request, res: Response) => {
 const flaskProxyOptions: Options = {
   target: config.flaskApiUrl,
   changeOrigin: true,
-  pathRewrite: {
-    '^/': '/api/', // Add /api prefix back (Express strips it)
-  },
   on: {
     proxyReq: (proxyReq, req) => {
       console.log(`[Flask Proxy] ${req.method} ${req.url} -> ${config.flaskApiUrl}`);
