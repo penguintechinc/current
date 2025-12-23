@@ -31,11 +31,11 @@ app.get('/readyz', (_req: Request, res: Response) => {
 
 // Proxy configuration for Flask API (auth, users, hello)
 const flaskProxyOptions: Options = {
-  target: config.flaskApiUrl,
+  target: `${config.flaskApiUrl}/api`,
   changeOrigin: true,
   on: {
     proxyReq: (proxyReq, req) => {
-      console.log(`[Flask Proxy] ${req.method} ${req.url} -> ${config.flaskApiUrl}`);
+      console.log(`[Flask Proxy] ${req.method} ${req.url} -> ${proxyReq.protocol}//${proxyReq.host}${proxyReq.path}`);
     },
     error: (err, _req, res) => {
       console.error('[Flask Proxy Error]', err);
