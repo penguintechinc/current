@@ -13,10 +13,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for layer caching
-COPY requirements.txt .
+COPY services/flask-backend/requirements.txt .
 
 # Copy shared libraries for editable install
-COPY ../../shared/py_libs /shared/py_libs
+COPY shared/py_libs /shared/py_libs
 
 # Create virtual environment and install dependencies
 RUN python -m venv /opt/venv
@@ -44,7 +44,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY --from=builder /shared/py_libs /shared/py_libs
 
 # Copy application code
-COPY --chown=appuser:appuser . .
+COPY --chown=appuser:appuser services/flask-backend/ .
 
 # Switch to non-root user
 USER appuser

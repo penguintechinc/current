@@ -1,256 +1,120 @@
-# ShortURL - Enterprise URL Shortener
-
-A high-performance, feature-rich URL shortening service built with Python, py4web, and Docker.
-
-## Features
-
-### Core Functionality
-- **URL Shortening**: Create short, memorable URLs with custom or auto-generated codes
-- **QR Code Generation**: Automatic QR code generation for all short URLs
-- **Category Management**: Organize URLs into categories for better management
-- **Search & Filter**: Full-text search across URLs with category filtering
-
-### Security & Access Control
-- **Role-Based Access Control (RBAC)**: Four distinct roles:
-  - **Admin**: Full system access
-  - **Contributor**: Can add/edit URLs but not manage users
-  - **Viewer**: Can view current URLs
-  - **Reporter**: Analytics access only
-- **OWASP Top 10 Compliance**: Built-in protection against common vulnerabilities
-- **Rate Limiting**: Configurable per-IP rate limiting (default: 10 req/sec)
-- **Input Validation**: Comprehensive validation and sanitization
-
-### Analytics & Monitoring
-- **Real-time Analytics**: Track clicks, visitors, geographic data
-- **GeoIP Integration**: Location-based analytics using GeoIP2
-- **Performance Metrics**: Response time tracking and monitoring
-- **Prometheus Integration**: `/metrics` endpoint for monitoring
-- **Health Checks**: `/healthz` endpoint for uptime monitoring
-
-### Infrastructure
-- **Multi-Port Architecture**:
-  - Ports 80/443: URL redirection proxy
-  - Port 9443: Admin portal (HTTPS only)
-- **TLS/SSL Support**:
-  - Auto-generated self-signed certificates
-  - ACME/Let's Encrypt integration
-  - Automatic certificate renewal
-- **Database Flexibility**: Support for any PyDAL-compatible database
-- **Docker Containerized**: Easy deployment and scaling
-
-## Quick Start
-
-### Using Docker Compose
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd shorturl
-```
-
-2. Copy and configure environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-3. Start the services:
-```bash
-docker-compose up -d
-```
-
-4. Access the services:
-- Admin Portal: https://localhost:9443
-- Main Site: http://localhost
-
-### Default Credentials
-
-- **Email**: admin@localhost
-- **Password**: admin123
-
-⚠️ **Important**: Change the default password immediately after first login!
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DB_TYPE` | Database type (sqlite, mysql, postgresql) | sqlite |
-| `DB_CONNECTION` | Database connection string | /var/data/current/db.sqlite |
-| `DOMAIN` | Your domain name | localhost |
-| `ADMIN_EMAIL` | Admin email for certificates | admin@localhost |
-| `SECRET_KEY` | Application secret key | change-me-in-production |
-| `REDIS_URL` | Redis connection URL | redis://redis:6379/0 |
-| `RATE_LIMIT_PER_SECOND` | Max requests per second per IP | 10 |
-| `ANALYTICS_RETENTION_DAYS` | Days to retain analytics data | 90 |
-
-### Database Configuration
-
-#### SQLite (Default)
-```env
-DB_TYPE=sqlite
-DB_CONNECTION=/var/data/current/db.sqlite
-```
-
-#### MySQL
-```env
-DB_TYPE=mysql
-DB_CONNECTION=user:password@host:3306/database
-```
-
-#### PostgreSQL
-```env
-DB_TYPE=postgresql
-DB_CONNECTION=user:password@host:5432/database
-```
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-- `POST /api/auth/register` - User registration
-
-### URL Management
-- `GET /api/urls` - List all URLs
-- `POST /api/urls` - Create new short URL
-- `PUT /api/urls/{id}` - Update URL
-- `DELETE /api/urls/{id}` - Delete URL
-- `GET /api/urls/search` - Search URLs
-
-### Categories
-- `GET /api/categories` - List categories
-- `POST /api/categories` - Create category
-- `PUT /api/categories/{id}` - Update category
-- `DELETE /api/categories/{id}` - Delete category
-
-### Analytics
-- `GET /api/analytics/url/{id}` - URL-specific analytics
-- `GET /api/analytics/global` - Global analytics
-- `GET /api/analytics/visitors` - Top visitors
-
-### Monitoring
-- `GET /healthz` - Health check
-- `GET /metrics` - Prometheus metrics
-
-## Architecture
+[![CI](https://github.com/PenguinCloud/project-template/actions/workflows/ci.yml/badge.svg)](https://github.com/PenguinCloud/project-template/actions/workflows/ci.yml)
+[![Docker Build](https://github.com/PenguinCloud/project-template/actions/workflows/docker-build.yml/badge.svg)](https://github.com/PenguinCloud/project-template/actions/workflows/docker-build.yml)
+[![codecov](https://codecov.io/gh/PenguinCloud/project-template/branch/main/graph/badge.svg)](https://codecov.io/gh/PenguinCloud/project-template)
+[![Go Report Card](https://goreportcard.com/badge/github.com/PenguinCloud/project-template)](https://goreportcard.com/report/github.com/PenguinCloud/project-template)
+[![version](https://img.shields.io/badge/version-5.1.1-blue.svg)](https://semver.org)
+[![License](https://img.shields.io/badge/License-Limited%20AGPL3-blue.svg)](LICENSE.md)
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                   Docker Container                   │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│  ┌─────────────────┐    ┌──────────────────┐      │
-│  │  Proxy Server   │    │   Admin Portal    │      │
-│  │  (Ports 80/443) │    │   (Port 9443)     │      │
-│  └────────┬────────┘    └─────────┬────────┘      │
-│           │                        │                │
-│           └────────────┬───────────┘                │
-│                       │                            │
-│            ┌──────────▼──────────┐                 │
-│            │      PyDAL ORM      │                 │
-│            └──────────┬──────────┘                 │
-│                       │                            │
-│     ┌─────────────────▼─────────────────┐          │
-│     │           Database                │          │
-│     │  (SQLite/MySQL/PostgreSQL/etc)    │          │
-│     └───────────────────────────────────┘          │
-│                                                     │
-│     ┌───────────────────────────────────┐          │
-│     │           Redis Cache             │          │
-│     │       (Rate Limiting/Sessions)     │          │
-│     └───────────────────────────────────┘          │
-│                                                     │
-└─────────────────────────────────────────────────────┘
+ ____            _           _     _____                    _       _
+|  _ \ _ __ ___ (_) ___  ___| |_  |_   _|__ _ __ ___  _ __ | | __ _| |_ ___
+| |_) | '__/ _ \| |/ _ \/ __| __|   | |/ _ \ '_ ` _ \| '_ \| |/ _` | __/ _ \
+|  __/| | | (_) | |  __/ (__| |_    | |  __/ | | | | | |_) | | (_| | ||  __/
+|_|   |_|  \___/| |\___|\___|\__|   |_|\___|_| |_| |_| .__/|_|\__,_|\__\___|
+               _/ |                                  |_|
+              |__/
 ```
 
-## Security Considerations
+# 🏗️ Enterprise Project Template
 
-1. **Change Default Credentials**: Always change the default admin password
-2. **Use HTTPS**: Configure proper SSL certificates for production
-3. **Set Strong Secret Key**: Use a cryptographically secure secret key
-4. **Database Security**: Use strong database passwords and limit network access
-5. **Rate Limiting**: Adjust rate limits based on your traffic patterns
-6. **Regular Updates**: Keep the application and dependencies updated
+**The Ultimate Multi-Language Development Foundation**
 
-## Troubleshooting
+This comprehensive project template provides a production-ready foundation for enterprise software development, incorporating best practices from Penguin Tech Inc projects. Built with security, scalability, and developer experience at its core, it offers standardized tooling for Go, Python, and Node.js applications with integrated licensing, monitoring, and enterprise-grade infrastructure.
+## ✨ Why Choose This Template?
 
-### Certificate Issues
-If you encounter certificate problems:
-```bash
-# Regenerate self-signed certificate
-docker-compose exec shorturl rm -rf /etc/letsencrypt/live/${DOMAIN}
-docker-compose restart shorturl
-```
+### 🏭 Enterprise-Ready Architecture
+Built for production from day one with multi-language support (Go 1.24+, Python 3.12/3.13, Node.js 18+), comprehensive CI/CD pipelines, and enterprise-grade security scanning.
 
-### Database Connection Issues
-Check your database configuration and ensure the database server is accessible:
-```bash
-docker-compose logs shorturl
-```
+### 🔒 Security First
+- **8-stage security validation** including Trivy, CodeQL, and Semgrep scanning
+- **TLS 1.2 minimum enforcement**, preferring TLS 1.3
+- **Automated vulnerability detection** with Dependabot and Socket.dev integration
+- **Secrets management** with environment-based configuration
 
-### Port Conflicts
-If ports are already in use, modify the port mappings in `docker-compose.yml`:
-```yaml
-ports:
-  - "8080:80"    # Change 8080 to your preferred port
-  - "8443:443"   # Change 8443 to your preferred port
-  - "9443:9443"  # Change first 9443 to your preferred port
-```
+### 🚀 Performance Optimized
+- **Multi-architecture Docker builds** (amd64/arm64) with Debian-slim base images
+- **Parallel CI/CD workflows** for optimized build times
+- **eBPF/XDP networking** support for high-performance applications
+- **Connection pooling** and caching strategies built-in
 
-## Development
+### 🏢 PenguinTech License Server Integration
+- **Centralized feature gating** with `https://license.penguintech.io`
+- **Universal JSON response format** across all products
+- **Multi-tier licensing** (community/professional/enterprise)
+- **Usage tracking and compliance** reporting
 
-### Local Development Setup
+### 🔄 Self-Healing & Monitoring
+- **Built-in health checks** and self-healing capabilities
+- **Prometheus metrics** and Grafana dashboard integration
+- **Structured logging** with configurable verbosity levels
+- **Real-time monitoring** and alerting
 
-1. Install Python 3.12+
-2. Install dependencies:
-```bash
-pip install -r shorturl-app/requirements.txt
-pip install -r shorturl-app/requirements-dev.txt  # For development/testing
-```
+### 🌐 Multi-Environment Support
+- **Air-gapped deployment** ready with local caching
+- **Container orchestration** with Kubernetes and Helm
+- **Environment-specific configurations** for dev/staging/production
+- **Blue-green deployment** support with automated rollbacks
 
-3. Set environment variables:
-```bash
-export DB_TYPE=sqlite
-export DB_CONNECTION=./dev.db
-export DOMAIN=localhost
-```
-
-4. Run the application:
-```bash
-python shorturl-app/main.py
-```
-
-### Testing
-
-The application includes comprehensive unit and integration tests:
+## 🛠️ Quick Start
 
 ```bash
-# Run all tests
-python3 run_tests.py
-
-# Run specific test categories
-python3 -m unittest tests.test_security_isolated -v    # Security tests
-python3 -m unittest tests.test_utils -v               # Utility tests
-python3 -m unittest tests.test_integration -v         # Integration tests
-python3 -m unittest tests.test_startup -v            # Startup tests
-
-# With pytest (if available)
-pytest tests/ -v --tb=short
+# Clone and setup
+git clone <your-repository-url>
+cd your-project
+make setup                    # Install dependencies and setup environment
+make dev                      # Start development environment
 ```
 
-**Test Coverage**: 19 tests with 100% success rate covering:
-- Security functions (XSS, SSRF, SQL injection prevention)
-- Utility functions (password hashing, code generation)
-- Application integration and file structure
-- Docker and deployment configuration
+## 📚 Key Components
 
-See [docs/TESTING.md](docs/TESTING.md) for detailed testing information.
+### Core Technologies
+- **Languages**: Go 1.24+, Python 3.12/3.13, Node.js 18+
+- **Databases**: PostgreSQL with PyDAL/GORM, Redis/Valkey caching
+- **Containers**: Docker with multi-stage builds, Kubernetes deployment
+- **Monitoring**: Prometheus, Grafana, structured logging
 
-## License
+### Security Features
+- Multi-factor authentication (MFA) and JWT tokens
+- Role-based access control (RBAC)
+- Automated security scanning and vulnerability management
+- Compliance audit logging (SOC2, ISO27001 ready)
 
-ShortURL is licensed under the Limited AGPL v3 with Fair Use Preamble. See [LICENSE.md](docs/LICENSE.md) for details.
+### Development Workflow
+- Comprehensive test coverage (unit, integration, e2e)
+- Automated code quality checks (linting, formatting, type checking)
+- Version management with semantic versioning
+- Feature branch workflow with required reviews
+
+## 📖 Documentation
+
+- **Getting Started**: [docs/development/](docs/development/)
+- **API Reference**: [docs/api/](docs/api/)
+- **Deployment Guide**: [docs/deployment/](docs/deployment/)
+- **Architecture Overview**: [docs/architecture/](docs/architecture/)
+- **License Integration**: [docs/licensing/](docs/licensing/)
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### Maintainers
+- **Primary**: creatorsemailhere@penguintech.group
+- **General**: info@penguintech.group
+- **Company**: [www.penguintech.io](https://www.penguintech.io)
+
+### Community Contributors
+- *Your name could be here! Submit a PR to get started.*
+
+## 📞 Support & Resources
+
+- **Documentation**: [./docs/](docs/)
+- **Premium Support**: https://support.penguintech.group
+- **Community Issues**: [GitHub Issues](../../issues)
+- **License Server Status**: https://status.penguintech.io
+
+## 📄 License
+
+This project is licensed under the Limited AGPL3 with preamble for fair use - see [LICENSE.md](docs/LICENSE.md) for details.
 
 **License Highlights:**
 - **Personal & Internal Use**: Free under AGPL-3.0
@@ -266,12 +130,4 @@ Companies employing official contributors receive GPL-2.0 access to community fe
 - **Future Versions**: New versions released after employment ends require standard licensing
 - **Community Only**: Enterprise features still require a commercial license
 
-This exception rewards contributors by providing lasting fair use rights to their employers.
-
-## Support
-
-For issues and feature requests, please use the GitHub issue tracker.
-
-## Contributing
-
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
+This exception rewards contributors by providing lasting fair use rights to their employers. See [LICENSE.md](docs/LICENSE.md) for full terms.
