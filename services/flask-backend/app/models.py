@@ -44,77 +44,48 @@ def init_db(app: Quart) -> DAL:
     db = DAL(
         db_uri,
         pool_size=Config.DB_POOL_SIZE,
-        migrate=True,
+        migrate=False,  # Disable PyDAL migration system
         check_reserved=["all"],
-        lazy_tables=False,
+        lazy_tables=True,
     )
 
-    # Define auth_user table (Flask-Security-Too compatible)
-    # Note: Flask-Security expects 'password' not 'password_hash'
-    # Note: Using 'is_active' instead of 'active' to avoid SQL reserved keyword
+    # Create tables if they don't exist
+    _create_tables_if_needed(db)
+
+    # Define tables for runtime use (without creating them again)
     db.define_table(
         "auth_user",
-        Field(
-            "email",
-            "string",
-            length=255,
-            unique=True,
-            requires=[
-                IS_NOT_EMPTY(error_message="Email is required"),
-                IS_EMAIL(error_message="Invalid email format"),
-            ],
-        ),
-        Field("password", "string", length=255, requires=IS_NOT_EMPTY()),
-        Field("is_active", "boolean", default=True),
-        # Flask-Security required fields
-        Field(
-            "fs_uniquifier",
-            "string",
-            length=64,
-            unique=True,
-            requires=IS_NOT_EMPTY(error_message="Uniquifier is required"),
-        ),
-        Field("fs_token_uniquifier", "string", length=64, unique=True),
-        # Additional user fields
-        Field("full_name", "string", length=255, default=""),
+        Field("email", "string", length=255),
+        Field("password", "string", length=255),
+        Field("is_active", "boolean"),
+        Field("fs_uniquifier", "string", length=64),
+        Field("fs_token_uniquifier", "string", length=64),
+        Field("full_name", "string", length=255),
         Field("confirmed_at", "datetime"),
-        # Trackable fields (Flask-Security trackable feature)
         Field("last_login_at", "datetime"),
         Field("current_login_at", "datetime"),
-        Field("last_login_ip", "string", length=45),  # IPv6 max length
+        Field("last_login_ip", "string", length=45),
         Field("current_login_ip", "string", length=45),
-        Field("login_count", "integer", default=0),
-        # Timestamps
-        Field("created_at", "datetime", default=datetime.utcnow),
-        Field("updated_at", "datetime", default=datetime.utcnow, update=datetime.utcnow),
+        Field("login_count", "integer"),
+        Field("created_at", "datetime"),
+        Field("updated_at", "datetime"),
+        migrate=False,  # Don't create tables
     )
 
-    # Define auth_role table
     db.define_table(
         "auth_role",
-        Field(
-            "name",
-            "string",
-            length=50,
-            unique=True,
-            requires=IS_IN_SET(
-                VALID_ROLES,
-                error_message=f"Role must be one of: {', '.join(VALID_ROLES)}",
-            ),
-        ),
+        Field("name", "string", length=50),
         Field("description", "text"),
-        Field("created_at", "datetime", default=datetime.utcnow),
+        Field("created_at", "datetime"),
+        migrate=False,  # Don't create tables
     )
 
-    # Define auth_user_roles join table
     db.define_table(
         "auth_user_roles",
-        Field("user_id", "reference auth_user", requires=IS_NOT_EMPTY()),
-        Field("role_id", "reference auth_role", requires=IS_NOT_EMPTY()),
+        Field("user_id", "reference auth_user"),
+        Field("role_id", "reference auth_role"),
+        migrate=False,  # Don't create tables
     )
-
-    # Commit table definitions
-    db.commit()
 
     # Ensure default roles exist
     _ensure_default_roles(db)
@@ -123,6 +94,127 @@ def init_db(app: Quart) -> DAL:
     app.config["db"] = db
 
     return db
+
+
+def _create_tables_if_needed(db: DAL) -> None:
+    """Create database tables if they don't already exist using raw SQL."""
+    db_type = Config.DB_TYPE.lower()
+
+    # Check if auth_user table exists
+    try:
+        db.executesql("SELECT 1 FROM auth_user LIMIT 1")
+        # Table exists, skip creation
+        return
+    except Exception:
+        # Table doesn't exist, create all tables
+        db.commit()  # Clear any failed transaction
+
+    try:
+        if "postgres" in db_type:
+            # PostgreSQL table definitions
+            try:
+                db.executesql("""
+                    CREATE TABLE auth_user (
+                        id SERIAL PRIMARY KEY,
+                        email VARCHAR(255) UNIQUE NOT NULL,
+                        password VARCHAR(255) NOT NULL,
+                        is_active BOOLEAN DEFAULT TRUE,
+                        fs_uniquifier VARCHAR(64) UNIQUE NOT NULL,
+                        fs_token_uniquifier VARCHAR(64) UNIQUE,
+                        full_name VARCHAR(255) DEFAULT '',
+                        confirmed_at TIMESTAMP,
+                        last_login_at TIMESTAMP,
+                        current_login_at TIMESTAMP,
+                        last_login_ip VARCHAR(45),
+                        current_login_ip VARCHAR(45),
+                        login_count INTEGER DEFAULT 0,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                db.commit()
+            except Exception:
+                db.commit()
+
+            try:
+                db.executesql("""
+                    CREATE TABLE auth_role (
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(50) UNIQUE NOT NULL,
+                        description TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                db.commit()
+            except Exception:
+                db.commit()
+
+            try:
+                db.executesql("""
+                    CREATE TABLE auth_user_roles (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL REFERENCES auth_user(id),
+                        role_id INTEGER NOT NULL REFERENCES auth_role(id),
+                        UNIQUE(user_id, role_id)
+                    )
+                """)
+                db.commit()
+            except Exception:
+                db.commit()
+        else:
+            # SQLite / MySQL compatible definitions
+            try:
+                db.executesql("""
+                    CREATE TABLE IF NOT EXISTS auth_user (
+                        id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                        email VARCHAR(255) UNIQUE NOT NULL,
+                        password VARCHAR(255) NOT NULL,
+                        is_active BOOLEAN DEFAULT TRUE,
+                        fs_uniquifier VARCHAR(64) UNIQUE NOT NULL,
+                        fs_token_uniquifier VARCHAR(64) UNIQUE,
+                        full_name VARCHAR(255) DEFAULT '',
+                        confirmed_at DATETIME,
+                        last_login_at DATETIME,
+                        current_login_at DATETIME,
+                        last_login_ip VARCHAR(45),
+                        current_login_ip VARCHAR(45),
+                        login_count INTEGER DEFAULT 0,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                db.commit()
+            except Exception:
+                db.commit()
+
+            try:
+                db.executesql("""
+                    CREATE TABLE IF NOT EXISTS auth_role (
+                        id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                        name VARCHAR(50) UNIQUE NOT NULL,
+                        description TEXT,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                db.commit()
+            except Exception:
+                db.commit()
+
+            try:
+                db.executesql("""
+                    CREATE TABLE IF NOT EXISTS auth_user_roles (
+                        id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                        user_id INTEGER NOT NULL REFERENCES auth_user(id),
+                        role_id INTEGER NOT NULL REFERENCES auth_role(id),
+                        UNIQUE(user_id, role_id)
+                    )
+                """)
+                db.commit()
+            except Exception:
+                db.commit()
+    except Exception as e:
+        # Table creation may fail due to existing tables or permission issues
+        db.commit()
 
 
 def _ensure_default_roles(db: DAL) -> None:

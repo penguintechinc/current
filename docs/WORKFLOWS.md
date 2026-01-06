@@ -92,13 +92,11 @@ A build package is a single, independently deployable service or application. Fo
 
 ### Project Services
 
-**Project Template** includes three services:
+**Current** is a single-service application:
 
 | Service | Directory | Dockerfile | Architectures | Notes |
 |---------|-----------|-----------|---------------|-------|
-| flask-backend | `services/flask-backend/` | `services/flask-backend/Dockerfile` | amd64, arm64 | Python 3.13, Flask, PyDAL |
-| go-backend | `services/go-backend/` | `services/go-backend/Dockerfile` | amd64, arm64 | Go 1.24, high-performance networking |
-| webui | `services/webui/` | `services/webui/Dockerfile` | amd64, arm64 | Node.js 18+, React frontend |
+| shorturl-app | `shorturl-app/` | `shorturl-app/Dockerfile` | amd64, arm64 | Python 3.13, Py4Web, PyDAL - URL shortener with admin portal and proxy server |
 
 ### Workflow Files
 
@@ -106,9 +104,7 @@ Each service has a corresponding workflow file:
 
 ```
 .github/workflows/
-├── build-flask-backend.yml    # Flask backend build pipeline
-├── build-go-backend.yml       # Go backend build pipeline
-├── build-webui.yml            # WebUI build pipeline
+├── build-shorturl-app.yml     # URL shortener app build pipeline
 └── version-release.yml        # Version-based pre-release creation
 ```
 
@@ -311,55 +307,25 @@ Each workflow includes multiple security checks:
 
 ### Language-Specific Security Checks
 
-#### Python Services (Flask)
+#### Python Services (Py4Web)
 
 **Bandit** - Scans for common Python security issues:
 
 ```yaml
 - name: Run bandit security check
-  working-directory: services/flask-backend
-  run: bandit -r app -ll
+  working-directory: shorturl-app
+  run: bandit -r apps/ -ll
 ```
 
 Fails on `HIGH` or `CRITICAL` severity only (allows `MEDIUM` and `LOW`).
 
 **Additional Checks**:
 - Linting: `flake8`, `black`, `isort`
-- Type checking: `mypy` for type safety
 - Dependency audit: `safety check` for vulnerable packages
 
-#### Go Services
+#### Node.js Services (Not applicable)
 
-**gosec** - Scans for Go security issues:
-
-```yaml
-- name: Run gosec security scanner
-  uses: securecodewarrior/github-action-gosec@master
-  with:
-    args: '-severity high -confidence medium ./...'
-```
-
-Fails on `HIGH` or `CRITICAL` severity.
-
-**Additional Checks**:
-- Linting: `golangci-lint` (includes gosec rules)
-- Dependency audit: `go mod audit`
-
-#### Node.js Services (React, WebUI)
-
-**npm audit** - Scans npm dependencies:
-
-```yaml
-- name: Run npm audit
-  working-directory: services/webui
-  run: npm audit --audit-level=high
-```
-
-Fails on `HIGH` or `CRITICAL` severity vulnerabilities.
-
-**Additional Checks**:
-- Linting: `eslint`, `prettier`
-- Dependency tracking: Dependabot alerts
+Current is a Python-only application and does not include Node.js services.
 
 ### Container Scanning
 
@@ -393,18 +359,12 @@ Best practice execution order:
 
 1. **Linting** (first - cheapest, fast feedback)
    - `flake8`, `black`, `isort` (Python)
-   - `golangci-lint` (Go)
-   - `eslint`, `prettier` (Node.js)
 
 2. **Dependency Audits** (second - catch vulnerable packages)
    - `bandit`, `safety check` (Python)
-   - `gosec`, `go mod audit` (Go)
-   - `npm audit` (Node.js)
 
 3. **Unit Tests** (third - verify functionality)
    - `pytest` (Python)
-   - `go test` (Go)
-   - `jest` (Node.js)
 
 4. **Build** (fourth - create artifacts)
    - Docker image build with multi-arch support
@@ -615,29 +575,23 @@ node --version            # 18+ for Node.js services
 
 ```bash
 # 1. Linting (catches code quality issues first)
-cd services/[service-name]
-npm run lint           # For Node.js services
-# OR
-python -m flake8 .     # For Python services
-# OR
-golangci-lint run      # For Go services
+cd shorturl-app
+python -m flake8 .
+black --check .
+isort --check-only .
 
 # 2. Security checks (catches vulnerable dependencies)
-npm audit --audit-level=high      # Node.js
-python -m safety check            # Python
-go mod audit                       # Go
-bandit -r .                        # Python
+python -m safety check
+bandit -r apps/ -ll
 
 # 3. Unit tests (verify functionality)
-npm test               # Node.js
-pytest                 # Python
-go test ./...          # Go
+pytest tests/ -v
 
 # 4. Build locally
-docker-compose build [service-name]
+docker-compose build shorturl-app
 
 # 5. Run locally
-docker-compose up [service-name]
+docker-compose up shorturl-app
 ```
 
 ### Local Docker Compose Testing
@@ -662,72 +616,29 @@ docker-compose down
 
 ### Common Testing Patterns
 
-#### Python Service Testing
+#### Python Service Testing (Current)
 
 ```bash
-cd services/flask-backend
+cd shorturl-app
 
 # Install dependencies
 pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
 # Run linting
-flake8 app
-black --check app
-isort --check-only app
+flake8 .
+black --check .
+isort --check-only .
 
 # Run security check
-bandit -r app -ll
+bandit -r apps/ -ll
+safety check
 
 # Run tests
-pytest --cov=app
+pytest tests/ -v --cov=apps
 
 # Build Docker image
-docker build -t my-service:test .
-```
-
-#### Go Service Testing
-
-```bash
-cd services/go-backend
-
-# Download dependencies
-go mod download
-
-# Run linting
-golangci-lint run
-
-# Run tests
-go test -v -race ./...
-
-# Build binary
-go build -o my-service main.go
-
-# Build Docker image
-docker build -t my-service:test .
-```
-
-#### Node.js Service Testing
-
-```bash
-cd services/webui
-
-# Install dependencies
-npm install
-
-# Run linting
-npm run lint
-
-# Run security audit
-npm audit --audit-level=high
-
-# Run tests
-npm test
-
-# Build
-npm run build
-
-# Build Docker image
-docker build -t my-service:test .
+docker build -t shorturl-app:test .
 ```
 
 ### Troubleshooting Local Tests
@@ -1133,13 +1044,11 @@ docker build -t test . || docker run -it [image-id] /bin/bash
 
 ### Service Registry
 
-**Project Template Services**:
+**Current Services**:
 
 | Service | Language | Path | Tests | Security | Notes |
 |---------|----------|------|-------|----------|-------|
-| flask-backend | Python | `services/flask-backend/` | pytest | bandit, safety check | Python 3.13, Flask, PyDAL |
-| go-backend | Go | `services/go-backend/` | go test | gosec, go mod audit | Go 1.24, high-performance networking |
-| webui | Node.js | `services/webui/` | jest | npm audit | React frontend, Node.js 18+ |
+| shorturl-app | Python | `shorturl-app/` | pytest | bandit, safety check | Python 3.13, Py4Web, PyDAL - URL shortener with admin portal and proxy server |
 
 ### Custom Variables
 
@@ -1164,30 +1073,32 @@ env:
 
 ### Custom Workflows
 
-**If needed, create project-specific workflows**:
+**Current Workflows**:
 
 ```
 .github/workflows/
-├── build-flask-backend.yml
-├── build-go-backend.yml
-├── build-webui.yml
-├── [project-name]-special-ci.yml    # Project-specific
-└── version-release.yml
+├── build-shorturl-app.yml         # URL shortener app build pipeline
+└── version-release.yml            # Version-based pre-release creation
 ```
 
 ### Project-Specific Notes
 
-**This is a reference template for all PenguinTech projects**
+**Current** is a single-service Python application built with Py4Web and PyDAL.
 
-All PenguinTech projects follow the same workflow structure and CI/CD patterns documented in this file. Use this as a reference guide when:
+Key characteristics:
+- Single Docker container (shorturl-app)
+- Python 3.13 with Py4Web framework
+- PyDAL for database abstraction and migrations
+- Admin portal for management
+- Proxy server for request handling
+- SQLite for development, PostgreSQL/MySQL for production
 
-- Setting up new projects
-- Troubleshooting CI/CD issues
-- Adding new services
-- Implementing security updates
-- Optimizing build performance
-
-Customization should be minimal and follow the patterns established in this template.
+Security considerations:
+- All endpoints use HTTPS/TLS
+- Input validation on all URL shortening requests
+- Rate limiting for abuse prevention
+- Security scanning via bandit and safety check
+- Container scanning via Trivy
 
 ### Known Issues & Workarounds
 
@@ -1200,13 +1111,11 @@ Customization should be minimal and follow the patterns established in this temp
 
 ### Performance Benchmarks
 
-**Record baseline performance for your project**:
+**Current Workflow Performance**:
 
 | Workflow | Avg Time | With Cache | Notes |
 |----------|----------|-----------|-------|
-| flask-backend | [time] | [time] | [Notes] |
-| go-backend | [time] | [time] | [Notes] |
-| webui | [time] | [time] | [Notes] |
+| shorturl-app | 8-12 min | 4-6 min | Single Python service with pytest |
 
 ### Support & Documentation
 
@@ -1359,11 +1268,11 @@ When workflow fails:
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.0.0 | 2025-12-11 | Customized for Project Template: Three services (flask-backend, go-backend, webui), PenguinTech reference template |
+| 1.0.0 | 2026-01-06 | Customized for Current: Single Python service (shorturl-app with Py4Web) |
 
 ---
 
-**Last Updated**: December 11, 2025
-**Template Version**: 1.0.0
-**Project**: Project Template
+**Last Updated**: January 6, 2026
+**Project Version**: 0.0.0
+**Project**: Current - URL Shortener Service
 **For Questions**: Refer to `docs/STANDARDS.md` or `CLAUDE.md`

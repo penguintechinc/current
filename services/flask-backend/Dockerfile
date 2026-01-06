@@ -41,7 +41,7 @@ COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy shared libraries (needed at runtime for editable install)
-COPY --from=builder /shared/py_libs /shared/py_libs
+COPY --chown=appuser:appuser --from=builder /shared/py_libs /shared/py_libs
 
 # Copy application code
 COPY --chown=appuser:appuser services/flask-backend/ .
