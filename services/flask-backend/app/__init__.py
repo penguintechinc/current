@@ -136,16 +136,45 @@ def _init_security(app: Quart, db: any) -> None:
     try:
         from flask_security import Security
 
-        # Initialize Flask-Security
-        # Note: In Quart, we need to handle this carefully
-        # Flask-Security init_app sets up the security context
+        # Disable Flask-Principal for Quart compatibility
+        # Flask-Principal's synchronous context handling conflicts with Quart's async model
+        # We use JWT-based authentication instead (see auth module)
+        app.config["SECURITY_USE_VERIFY_PASSWORD_CACHE"] = False
+        app.config["SECURITY_BACKWARDS_COMPAT_UNAUTHN"] = True
+
+        # Monkey-patch to disable Flask-Principal initialization
+        # This prevents the "Working outside of application context" error
+        import flask_security.core
+        original_init_app = flask_security.core._SecurityState.init_app
+
+        def patched_init_app(self, app):
+            # Call original init_app but skip Principal setup
+            result = original_init_app(self, app)
+            # Remove Principal's before_request handler if it was added
+            if hasattr(app, 'before_request_funcs'):
+                # Filter out Principal's handler
+                for bp_name in list(app.before_request_funcs.keys()):
+                    if app.before_request_funcs[bp_name]:
+                        app.before_request_funcs[bp_name] = [
+                            func for func in app.before_request_funcs[bp_name]
+                            if not (hasattr(func, '__module__') and
+                                   'flask_principal' in func.__module__)
+                        ]
+            return result
+
+        flask_security.core._SecurityState.init_app = patched_init_app
+
+        # Initialize Flask-Security without Flask-Principal
         security = Security(app, user_datastore, register_blueprint=False)
 
-        app.logger.info("Flask-Security-Too initialized successfully")
+        app.logger.info("Flask-Security-Too initialized (without Flask-Principal for Quart compatibility)")
 
     except ImportError as e:
         app.logger.warning(f"Flask-Security-Too not available: {e}")
         app.logger.warning("Running in legacy mode without Flask-Security")
+    except Exception as e:
+        app.logger.error(f"Error initializing Flask-Security: {e}")
+        app.logger.warning("Running without Flask-Security due to initialization error")
 
 
 def _apply_security_headers(app: Quart) -> None:
