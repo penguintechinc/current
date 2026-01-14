@@ -50,12 +50,16 @@ def create_app(config_class: type | None = None) -> Quart:
     _setup_logging(app)
 
     # Initialize CORS
+    cors_origins = app.config.get("CORS_ORIGINS", "*").split(",")
+    # Disable credentials if using wildcard origins (CORS security requirement)
+    allow_credentials = "*" not in cors_origins and cors_origins != ["*"]
+
     app = cors(
         app,
-        allow_origin=app.config.get("CORS_ORIGINS", "*").split(","),
+        allow_origin=cors_origins,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
-        allow_credentials=True,
+        allow_credentials=allow_credentials,
     )
 
     # Initialize database
