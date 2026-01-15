@@ -161,7 +161,9 @@ def verify_password(password: str, password_hash: str) -> bool:
         import bcrypt
 
         try:
-            return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
+            return bcrypt.checkpw(
+                password.encode("utf-8"), password_hash.encode("utf-8")
+            )
         except ValueError:
             return False
 
@@ -356,7 +358,9 @@ async def refresh():
 
     # Generate new tokens
     access_token = create_access_token(user["id"], user["role"])
-    new_refresh_token, refresh_expires = await run_sync(create_refresh_token, user["id"])
+    new_refresh_token, refresh_expires = await run_sync(
+        create_refresh_token, user["id"]
+    )
 
     response = RefreshTokenResponse(
         access_token=access_token,

@@ -149,20 +149,24 @@ def _init_security(app: Quart, db: any) -> None:
         # Monkey-patch to disable Flask-Principal initialization
         # This prevents the "Working outside of application context" error
         import flask_security.core
+
         original_init_app = flask_security.core._SecurityState.init_app
 
         def patched_init_app(self, app):
             # Call original init_app but skip Principal setup
             result = original_init_app(self, app)
             # Remove Principal's before_request handler if it was added
-            if hasattr(app, 'before_request_funcs'):
+            if hasattr(app, "before_request_funcs"):
                 # Filter out Principal's handler
                 for bp_name in list(app.before_request_funcs.keys()):
                     if app.before_request_funcs[bp_name]:
                         app.before_request_funcs[bp_name] = [
-                            func for func in app.before_request_funcs[bp_name]
-                            if not (hasattr(func, '__module__') and
-                                   'flask_principal' in func.__module__)
+                            func
+                            for func in app.before_request_funcs[bp_name]
+                            if not (
+                                hasattr(func, "__module__")
+                                and "flask_principal" in func.__module__
+                            )
                         ]
             return result
 
@@ -171,7 +175,9 @@ def _init_security(app: Quart, db: any) -> None:
         # Initialize Flask-Security without Flask-Principal
         security = Security(app, user_datastore, register_blueprint=False)
 
-        app.logger.info("Flask-Security-Too initialized (without Flask-Principal for Quart compatibility)")
+        app.logger.info(
+            "Flask-Security-Too initialized (without Flask-Principal for Quart compatibility)"
+        )
 
     except ImportError as e:
         app.logger.warning(f"Flask-Security-Too not available: {e}")
@@ -338,7 +344,10 @@ def _register_error_handlers(app: Quart) -> None:
     @app.errorhandler(401)
     async def unauthorized(error):
         """Handle 401 Unauthorized errors."""
-        return jsonify({"error": "Unauthorized", "message": "Authentication required"}), 401
+        return (
+            jsonify({"error": "Unauthorized", "message": "Authentication required"}),
+            401,
+        )
 
     @app.errorhandler(403)
     async def forbidden(error):
@@ -363,7 +372,10 @@ def _register_error_handlers(app: Quart) -> None:
     @app.errorhandler(429)
     async def rate_limit_exceeded(error):
         """Handle 429 Too Many Requests errors."""
-        return jsonify({"error": "Rate limit exceeded", "message": "Too many requests"}), 429
+        return (
+            jsonify({"error": "Rate limit exceeded", "message": "Too many requests"}),
+            429,
+        )
 
     @app.errorhandler(500)
     async def internal_error(error):

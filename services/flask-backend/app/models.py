@@ -92,6 +92,7 @@ def init_db(app: Quart) -> DAL:
 
     # Initialize RBAC tables and scopes
     from .rbac import init_rbac_tables
+
     init_rbac_tables(db)
 
     # Store db instance in app
@@ -117,7 +118,8 @@ def _create_tables_if_needed(db: DAL) -> None:
         if "postgres" in db_type:
             # PostgreSQL table definitions
             try:
-                db.executesql("""
+                db.executesql(
+                    """
                     CREATE TABLE auth_user (
                         id SERIAL PRIMARY KEY,
                         email VARCHAR(255) UNIQUE NOT NULL,
@@ -135,40 +137,46 @@ def _create_tables_if_needed(db: DAL) -> None:
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
-                """)
+                """
+                )
                 db.commit()
             except Exception:
                 db.commit()
 
             try:
-                db.executesql("""
+                db.executesql(
+                    """
                     CREATE TABLE auth_role (
                         id SERIAL PRIMARY KEY,
                         name VARCHAR(50) UNIQUE NOT NULL,
                         description TEXT,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
-                """)
+                """
+                )
                 db.commit()
             except Exception:
                 db.commit()
 
             try:
-                db.executesql("""
+                db.executesql(
+                    """
                     CREATE TABLE auth_user_roles (
                         id SERIAL PRIMARY KEY,
                         user_id INTEGER NOT NULL REFERENCES auth_user(id),
                         role_id INTEGER NOT NULL REFERENCES auth_role(id),
                         UNIQUE(user_id, role_id)
                     )
-                """)
+                """
+                )
                 db.commit()
             except Exception:
                 db.commit()
         else:
             # SQLite / MySQL compatible definitions
             try:
-                db.executesql("""
+                db.executesql(
+                    """
                     CREATE TABLE IF NOT EXISTS auth_user (
                         id INTEGER PRIMARY KEY AUTO_INCREMENT,
                         email VARCHAR(255) UNIQUE NOT NULL,
@@ -186,33 +194,38 @@ def _create_tables_if_needed(db: DAL) -> None:
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
                     )
-                """)
+                """
+                )
                 db.commit()
             except Exception:
                 db.commit()
 
             try:
-                db.executesql("""
+                db.executesql(
+                    """
                     CREATE TABLE IF NOT EXISTS auth_role (
                         id INTEGER PRIMARY KEY AUTO_INCREMENT,
                         name VARCHAR(50) UNIQUE NOT NULL,
                         description TEXT,
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                     )
-                """)
+                """
+                )
                 db.commit()
             except Exception:
                 db.commit()
 
             try:
-                db.executesql("""
+                db.executesql(
+                    """
                     CREATE TABLE IF NOT EXISTS auth_user_roles (
                         id INTEGER PRIMARY KEY AUTO_INCREMENT,
                         user_id INTEGER NOT NULL REFERENCES auth_user(id),
                         role_id INTEGER NOT NULL REFERENCES auth_role(id),
                         UNIQUE(user_id, role_id)
                     )
-                """)
+                """
+                )
                 db.commit()
             except Exception:
                 db.commit()
@@ -239,9 +252,9 @@ def _ensure_default_roles(db: DAL) -> None:
 
     # Team-level roles
     team_roles = {
-        'team_admin': 'Full access within team',
-        'team_maintainer': 'Read/write access within team',
-        'team_viewer': 'Read-only access within team',
+        "team_admin": "Full access within team",
+        "team_maintainer": "Read/write access within team",
+        "team_viewer": "Read-only access within team",
     }
     for role_name, description in team_roles.items():
         existing = db(db.auth_role.name == role_name).select().first()
@@ -250,9 +263,9 @@ def _ensure_default_roles(db: DAL) -> None:
 
     # Resource-level roles
     resource_roles = {
-        'owner': 'Full control over specific resource',
-        'editor': 'Read/write on specific resource',
-        'resource_viewer': 'Read-only on specific resource',
+        "owner": "Full control over specific resource",
+        "editor": "Read/write on specific resource",
+        "resource_viewer": "Read-only on specific resource",
     }
     for role_name, description in resource_roles.items():
         existing = db(db.auth_role.name == role_name).select().first()
@@ -352,14 +365,14 @@ def create_user(
 
         # Also assign role at global level in new RBAC system
         # Define user_role_assignments table if not already defined
-        if 'user_role_assignments' not in db.tables:
+        if "user_role_assignments" not in db.tables:
             db.define_table(
-                'user_role_assignments',
-                db.Field('user_id', 'reference auth_user'),
-                db.Field('role_id', 'reference auth_role'),
-                db.Field('scope_level', 'string', length=20),
-                db.Field('scope_id', 'integer'),
-                db.Field('created_at', 'datetime'),
+                "user_role_assignments",
+                db.Field("user_id", "reference auth_user"),
+                db.Field("role_id", "reference auth_role"),
+                db.Field("scope_level", "string", length=20),
+                db.Field("scope_id", "integer"),
+                db.Field("created_at", "datetime"),
                 migrate=False,
             )
 
@@ -367,7 +380,7 @@ def create_user(
         db.user_role_assignments.insert(
             user_id=user_id,
             role_id=role_row.id,
-            scope_level='global',
+            scope_level="global",
             scope_id=None,
         )
 
@@ -495,11 +508,15 @@ def is_refresh_token_valid(token_hash: str) -> bool:
     db = get_db()
     if "refresh_tokens" not in db.tables:
         return False
-    token = db(
-        (db.refresh_tokens.token_hash == token_hash)
-        & (db.refresh_tokens.revoked == False)  # noqa: E712
-        & (db.refresh_tokens.expires_at > datetime.utcnow())
-    ).select().first()
+    token = (
+        db(
+            (db.refresh_tokens.token_hash == token_hash)
+            & (db.refresh_tokens.revoked == False)  # noqa: E712
+            & (db.refresh_tokens.expires_at > datetime.utcnow())
+        )
+        .select()
+        .first()
+    )
     return token is not None
 
 

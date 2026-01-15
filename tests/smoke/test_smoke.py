@@ -24,12 +24,13 @@ TIMEOUT = 30
 
 class Color:
     """ANSI color codes for terminal output"""
-    GREEN = '\033[92m'
-    RED = '\033[91m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    END = '\033[0m'
-    BOLD = '\033[1m'
+
+    GREEN = "\033[92m"
+    RED = "\033[91m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    END = "\033[0m"
+    BOLD = "\033[1m"
 
 
 def print_test(name: str, status: str, message: str = ""):
@@ -51,12 +52,7 @@ def print_test(name: str, status: str, message: str = ""):
 def run_command(cmd: List[str], timeout: int = 60) -> Tuple[int, str, str]:
     """Run shell command and return exit code, stdout, stderr"""
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout
-        )
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         return result.returncode, result.stdout, result.stderr
     except subprocess.TimeoutExpired:
         return 1, "", "Command timed out"
@@ -76,10 +72,7 @@ def test_docker_compose_up() -> bool:
 
     # Start services
     print("  Starting services (this may take a minute)...")
-    code, stdout, stderr = run_command(
-        ["docker", "compose", "up", "-d"],
-        timeout=120
-    )
+    code, stdout, stderr = run_command(["docker", "compose", "up", "-d"], timeout=120)
 
     if code != 0:
         print_test("Docker Compose up", "FAIL", f"Failed to start: {stderr}")
@@ -101,9 +94,9 @@ def test_services_healthy() -> bool:
     time.sleep(10)
 
     for service in services:
-        code, stdout, stderr = run_command([
-            "docker", "compose", "ps", "--format", "json", service
-        ])
+        code, stdout, stderr = run_command(
+            ["docker", "compose", "ps", "--format", "json", service]
+        )
 
         if code != 0 or not stdout.strip():
             print_test(f"Service: {service}", "FAIL", "Not found")
@@ -130,16 +123,19 @@ def test_flask_health() -> bool:
         if response.status_code == 200:
             data = response.json()
             if data.get("status") == "healthy":
-                print_test("Flask health endpoint", "PASS",
-                          f"Database: {data.get('database', 'unknown')}")
+                print_test(
+                    "Flask health endpoint",
+                    "PASS",
+                    f"Database: {data.get('database', 'unknown')}",
+                )
                 return True
             else:
-                print_test("Flask health endpoint", "FAIL",
-                          f"Status: {data.get('status')}")
+                print_test(
+                    "Flask health endpoint", "FAIL", f"Status: {data.get('status')}"
+                )
                 return False
         else:
-            print_test("Flask health endpoint", "FAIL",
-                      f"HTTP {response.status_code}")
+            print_test("Flask health endpoint", "FAIL", f"HTTP {response.status_code}")
             return False
 
     except requests.exceptions.RequestException as e:
@@ -164,11 +160,13 @@ def test_flask_api_endpoints() -> bool:
             response = requests.get(f"{FLASK_URL}{path}", timeout=5)
 
             if response.status_code == expected_status:
-                print_test(description, "PASS",
-                          f"HTTP {response.status_code}")
+                print_test(description, "PASS", f"HTTP {response.status_code}")
             else:
-                print_test(description, "FAIL",
-                          f"Expected {expected_status}, got {response.status_code}")
+                print_test(
+                    description,
+                    "FAIL",
+                    f"Expected {expected_status}, got {response.status_code}",
+                )
                 all_passed = False
 
         except requests.exceptions.RequestException as e:
@@ -191,12 +189,12 @@ def test_webui_health() -> bool:
                 print_test("WebUI health endpoint", "PASS")
                 return True
             else:
-                print_test("WebUI health endpoint", "FAIL",
-                          f"Status: {data.get('status')}")
+                print_test(
+                    "WebUI health endpoint", "FAIL", f"Status: {data.get('status')}"
+                )
                 return False
         else:
-            print_test("WebUI health endpoint", "FAIL",
-                      f"HTTP {response.status_code}")
+            print_test("WebUI health endpoint", "FAIL", f"HTTP {response.status_code}")
             return False
 
     except requests.exceptions.RequestException as e:
@@ -220,8 +218,7 @@ def test_webui_loads() -> bool:
                 print_test("WebUI homepage", "FAIL", "React root not found")
                 return False
         else:
-            print_test("WebUI homepage", "FAIL",
-                      f"HTTP {response.status_code}")
+            print_test("WebUI homepage", "FAIL", f"HTTP {response.status_code}")
             return False
 
     except requests.exceptions.RequestException as e:
@@ -251,8 +248,7 @@ def test_logo_files() -> bool:
             if response.status_code == 200:
                 print_test(f"Asset: {path}", "PASS")
             else:
-                print_test(f"Asset: {path}", "FAIL",
-                          f"HTTP {response.status_code}")
+                print_test(f"Asset: {path}", "FAIL", f"HTTP {response.status_code}")
                 all_passed = False
 
         except requests.exceptions.RequestException as e:
@@ -287,7 +283,9 @@ def main():
     total = len(results)
 
     for test_name, result in results.items():
-        status = f"{Color.GREEN}PASS{Color.END}" if result else f"{Color.RED}FAIL{Color.END}"
+        status = (
+            f"{Color.GREEN}PASS{Color.END}" if result else f"{Color.RED}FAIL{Color.END}"
+        )
         print(f"  {test_name}: {status}")
 
     print(f"\n{Color.BOLD}Total: {passed}/{total} passed{Color.END}")

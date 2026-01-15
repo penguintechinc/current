@@ -172,7 +172,10 @@ class ProductionConfig(Config):
     @classmethod
     def validate(cls) -> None:
         """Validate production configuration."""
-        if not cls.SECRET_KEY or cls.SECRET_KEY == "dev-secret-key-change-in-production":
+        if (
+            not cls.SECRET_KEY
+            or cls.SECRET_KEY == "dev-secret-key-change-in-production"
+        ):
             raise ValueError("SECRET_KEY must be set in production")
         if not cls.SECURITY_PASSWORD_SALT or "change" in cls.SECURITY_PASSWORD_SALT:
             raise ValueError("SECURITY_PASSWORD_SALT must be set in production")

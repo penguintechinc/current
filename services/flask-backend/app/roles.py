@@ -10,13 +10,19 @@ from quart import Blueprint, jsonify, request, g
 from werkzeug.exceptions import BadRequest, NotFound
 
 from .auth import auth_required
-from .rbac import require_scope, SCOPES, ROLE_SCOPES, TEAM_ROLE_SCOPES, RESOURCE_ROLE_SCOPES
+from .rbac import (
+    require_scope,
+    SCOPES,
+    ROLE_SCOPES,
+    TEAM_ROLE_SCOPES,
+    RESOURCE_ROLE_SCOPES,
+)
 from .models import get_db
 
-roles_bp = Blueprint('roles', __name__)
+roles_bp = Blueprint("roles", __name__)
 
 
-@roles_bp.route('/scopes', methods=['GET'])
+@roles_bp.route("/scopes", methods=["GET"])
 @auth_required
 async def list_scopes():
     """
@@ -30,14 +36,11 @@ async def list_scopes():
             ]
         }
     """
-    scopes_list = [
-        {'name': name, 'description': desc}
-        for name, desc in SCOPES.items()
-    ]
-    return jsonify({'data': scopes_list}), 200
+    scopes_list = [{"name": name, "description": desc} for name, desc in SCOPES.items()]
+    return jsonify({"data": scopes_list}), 200
 
 
-@roles_bp.route('/roles', methods=['GET'])
+@roles_bp.route("/roles", methods=["GET"])
 @auth_required
 async def list_roles():
     """
@@ -61,7 +64,7 @@ async def list_roles():
         }
     """
     db = get_db()
-    level_filter = request.args.get('level')  # global, team, resource
+    level_filter = request.args.get("level")  # global, team, resource
 
     # Get all roles
     roles = db(db.auth_role).select().as_list()
@@ -69,36 +72,47 @@ async def list_roles():
     result = []
     for role in roles:
         # Get scopes for this role
-        role_scopes = db(
-            (db.role_scopes.role_id == role['id']) &
-            (db.role_scopes.scope_id == db.scopes.id)
-        ).select(db.scopes.name).as_list()
+        role_scopes = (
+            db(
+                (db.role_scopes.role_id == role["id"])
+                & (db.role_scopes.scope_id == db.scopes.id)
+            )
+            .select(db.scopes.name)
+            .as_list()
+        )
 
-        scope_names = [rs['name'] for rs in role_scopes]
+        scope_names = [rs["name"] for rs in role_scopes]
 
         # Filter by level if specified
         if level_filter:
-            if level_filter == 'global' and not role['name'] in ROLE_SCOPES:
+            if level_filter == "global" and not role["name"] in ROLE_SCOPES:
                 continue
-            if level_filter == 'team' and not role['name'] in TEAM_ROLE_SCOPES:
+            if level_filter == "team" and not role["name"] in TEAM_ROLE_SCOPES:
                 continue
-            if level_filter == 'resource' and not role['name'] in RESOURCE_ROLE_SCOPES:
+            if level_filter == "resource" and not role["name"] in RESOURCE_ROLE_SCOPES:
                 continue
 
-        result.append({
-            'id': role['id'],
-            'name': role['name'],
-            'description': role['description'],
-            'scopes': scope_names,
-            'is_custom': role['name'] not in {**ROLE_SCOPES, **TEAM_ROLE_SCOPES, **RESOURCE_ROLE_SCOPES}.keys(),
-        })
+        result.append(
+            {
+                "id": role["id"],
+                "name": role["name"],
+                "description": role["description"],
+                "scopes": scope_names,
+                "is_custom": role["name"]
+                not in {
+                    **ROLE_SCOPES,
+                    **TEAM_ROLE_SCOPES,
+                    **RESOURCE_ROLE_SCOPES,
+                }.keys(),
+            }
+        )
 
-    return jsonify({'data': result}), 200
+    return jsonify({"data": result}), 200
 
 
-@roles_bp.route('/roles/custom', methods=['POST'])
+@roles_bp.route("/roles/custom", methods=["POST"])
 @auth_required
-@require_scope('users:admin', 'system:admin')
+@require_scope("users:admin", "system:admin")
 async def create_custom_role():
     """
     Create a custom role with selected scopes.
@@ -115,17 +129,17 @@ async def create_custom_role():
     """
     data = await request.get_json()
 
-    if not data or 'name' not in data or 'scopes' not in data:
-        raise BadRequest('name and scopes are required')
+    if not data or "name" not in data or "scopes" not in data:
+        raise BadRequest("name and scopes are required")
 
-    role_name = data['name']
-    description = data.get('description', '')
-    selected_scopes = data['scopes']
-    level = data.get('level', 'global')
+    role_name = data["name"]
+    description = data.get("description", "")
+    selected_scopes = data["scopes"]
+    level = data.get("level", "global")
 
     # Validate level
-    if level not in ['global', 'team', 'resource']:
-        raise BadRequest('level must be global, team, or resource')
+    if level not in ["global", "team", "resource"]:
+        raise BadRequest("level must be global, team, or resource")
 
     # Validate scopes
     available_scopes = set(SCOPES.keys())
@@ -134,12 +148,12 @@ async def create_custom_role():
         raise BadRequest(f'Invalid scopes: {", ".join(invalid_scopes)}')
 
     db = get_db()
-    user_id = g.current_user['id']
+    user_id = g.current_user["id"]
 
     # Check if role name already exists
     existing = db(db.auth_role.name == role_name).select().first()
     if existing:
-        raise BadRequest(f'Role {role_name} already exists')
+        raise BadRequest(f"Role {role_name} already exists")
 
     # Create custom role
     role_id = db.auth_role.insert(
@@ -168,21 +182,26 @@ async def create_custom_role():
 
     # Return created role
     role = db(db.auth_role.id == role_id).select().first()
-    return jsonify({
-        'data': {
-            'id': role.id,
-            'name': role.name,
-            'description': role.description,
-            'scopes': selected_scopes,
-            'level': level,
-            'is_custom': True,
-        }
-    }), 201
+    return (
+        jsonify(
+            {
+                "data": {
+                    "id": role.id,
+                    "name": role.name,
+                    "description": role.description,
+                    "scopes": selected_scopes,
+                    "level": level,
+                    "is_custom": True,
+                }
+            }
+        ),
+        201,
+    )
 
 
-@roles_bp.route('/roles/<int:role_id>', methods=['DELETE'])
+@roles_bp.route("/roles/<int:role_id>", methods=["DELETE"])
 @auth_required
-@require_scope('users:admin', 'system:admin')
+@require_scope("users:admin", "system:admin")
 async def delete_custom_role(role_id: int):
     """
     Delete a custom role.
@@ -194,25 +213,26 @@ async def delete_custom_role(role_id: int):
     db = get_db()
 
     # Check if it's a custom role
-    custom_role = db(
-        (db.custom_roles.name == db.auth_role.name) &
-        (db.auth_role.id == role_id)
-    ).select(db.custom_roles.ALL).first()
+    custom_role = (
+        db((db.custom_roles.name == db.auth_role.name) & (db.auth_role.id == role_id))
+        .select(db.custom_roles.ALL)
+        .first()
+    )
 
     if not custom_role:
-        raise BadRequest('Cannot delete built-in role')
+        raise BadRequest("Cannot delete built-in role")
 
     # Delete role (cascades to role_scopes and user_role_assignments)
     db(db.auth_role.id == role_id).delete()
     db(db.custom_roles.id == custom_role.id).delete()
     db.commit()
 
-    return jsonify({'message': 'Custom role deleted'}), 200
+    return jsonify({"message": "Custom role deleted"}), 200
 
 
-@roles_bp.route('/users/<int:user_id>/roles', methods=['POST'])
+@roles_bp.route("/users/<int:user_id>/roles", methods=["POST"])
 @auth_required
-@require_scope('users:admin')
+@require_scope("users:admin")
 async def assign_role_to_user(user_id: int):
     """
     Assign a role to a user at a specific scope level.
@@ -228,38 +248,42 @@ async def assign_role_to_user(user_id: int):
     """
     data = await request.get_json()
 
-    if not data or 'role_id' not in data or 'scope_level' not in data:
-        raise BadRequest('role_id and scope_level are required')
+    if not data or "role_id" not in data or "scope_level" not in data:
+        raise BadRequest("role_id and scope_level are required")
 
-    role_id = data['role_id']
-    scope_level = data['scope_level']
-    scope_id = data.get('scope_id')
+    role_id = data["role_id"]
+    scope_level = data["scope_level"]
+    scope_id = data.get("scope_id")
 
     # Validate scope_level
-    if scope_level not in ['global', 'team', 'resource']:
-        raise BadRequest('scope_level must be global, team, or resource')
+    if scope_level not in ["global", "team", "resource"]:
+        raise BadRequest("scope_level must be global, team, or resource")
 
     # Validate scope_id for team/resource levels
-    if scope_level in ['team', 'resource'] and not scope_id:
-        raise BadRequest(f'scope_id is required for {scope_level} level')
+    if scope_level in ["team", "resource"] and not scope_id:
+        raise BadRequest(f"scope_id is required for {scope_level} level")
 
     db = get_db()
 
     # Verify user exists
     user = db(db.auth_user.id == user_id).select().first()
     if not user:
-        raise NotFound('User not found')
+        raise NotFound("User not found")
 
     # Verify role exists
     role = db(db.auth_role.id == role_id).select().first()
     if not role:
-        raise NotFound('Role not found')
+        raise NotFound("Role not found")
 
     # Remove existing role assignment at this scope level/id
     db(
-        (db.user_role_assignments.user_id == user_id) &
-        (db.user_role_assignments.scope_level == scope_level) &
-        (db.user_role_assignments.scope_id == scope_id if scope_id else db.user_role_assignments.scope_id == None)
+        (db.user_role_assignments.user_id == user_id)
+        & (db.user_role_assignments.scope_level == scope_level)
+        & (
+            db.user_role_assignments.scope_id == scope_id
+            if scope_id
+            else db.user_role_assignments.scope_id == None
+        )
     ).delete()
 
     # Create new role assignment
@@ -271,7 +295,7 @@ async def assign_role_to_user(user_id: int):
     )
 
     # Also update legacy auth_user_roles table for global roles
-    if scope_level == 'global':
+    if scope_level == "global":
         # Remove existing global role
         db(db.auth_user_roles.user_id == user_id).delete()
         # Add new global role
@@ -279,12 +303,12 @@ async def assign_role_to_user(user_id: int):
 
     db.commit()
 
-    return jsonify({'message': 'Role assigned successfully'}), 200
+    return jsonify({"message": "Role assigned successfully"}), 200
 
 
-@roles_bp.route('/users/<int:user_id>/roles', methods=['GET'])
+@roles_bp.route("/users/<int:user_id>/roles", methods=["GET"])
 @auth_required
-@require_scope('users:read')
+@require_scope("users:read")
 async def get_user_roles(user_id: int):
     """
     Get all role assignments for a user.
@@ -314,29 +338,37 @@ async def get_user_roles(user_id: int):
     db = get_db()
 
     # Get user's role assignments
-    assignments = db(
-        (db.user_role_assignments.user_id == user_id) &
-        (db.user_role_assignments.role_id == db.auth_role.id)
-    ).select(
-        db.user_role_assignments.ALL,
-        db.auth_role.name,
-    ).as_list()
+    assignments = (
+        db(
+            (db.user_role_assignments.user_id == user_id)
+            & (db.user_role_assignments.role_id == db.auth_role.id)
+        )
+        .select(
+            db.user_role_assignments.ALL,
+            db.auth_role.name,
+        )
+        .as_list()
+    )
 
     result = []
     for assignment in assignments:
         role_data = {
-            'role_id': assignment['user_role_assignments']['role_id'],
-            'role_name': assignment['auth_role']['name'],
-            'scope_level': assignment['user_role_assignments']['scope_level'],
-            'scope_id': assignment['user_role_assignments']['scope_id'],
+            "role_id": assignment["user_role_assignments"]["role_id"],
+            "role_name": assignment["auth_role"]["name"],
+            "scope_level": assignment["user_role_assignments"]["scope_level"],
+            "scope_id": assignment["user_role_assignments"]["scope_id"],
         }
 
         # Add scope name if applicable
-        if assignment['user_role_assignments']['scope_level'] == 'team':
-            team = db(db.teams.id == assignment['user_role_assignments']['scope_id']).select().first()
+        if assignment["user_role_assignments"]["scope_level"] == "team":
+            team = (
+                db(db.teams.id == assignment["user_role_assignments"]["scope_id"])
+                .select()
+                .first()
+            )
             if team:
-                role_data['scope_name'] = team.name
+                role_data["scope_name"] = team.name
 
         result.append(role_data)
 
-    return jsonify({'data': result}), 200
+    return jsonify({"data": result}), 200

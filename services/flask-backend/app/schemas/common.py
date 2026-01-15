@@ -14,8 +14,12 @@ class ErrorResponse(BaseModel):
     """Standard error response format."""
 
     error: str = Field(..., description="Error message")
-    code: Optional[str] = Field(None, description="Error code for programmatic handling")
-    details: Optional[dict[str, Any]] = Field(None, description="Additional error details")
+    code: Optional[str] = Field(
+        None, description="Error code for programmatic handling"
+    )
+    details: Optional[dict[str, Any]] = Field(
+        None, description="Additional error details"
+    )
 
     model_config = ConfigDict(
         json_schema_extra={

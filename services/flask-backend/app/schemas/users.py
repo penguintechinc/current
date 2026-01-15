@@ -140,7 +140,9 @@ class UserDetailResponse(UserListItem):
     """Detailed user response for single user endpoints."""
 
     login_count: Optional[int] = Field(None, description="Total login count")
-    confirmed_at: Optional[datetime] = Field(None, description="Email confirmation time")
+    confirmed_at: Optional[datetime] = Field(
+        None, description="Email confirmation time"
+    )
 
 
 class PaginatedUsersResponse(BaseModel):
