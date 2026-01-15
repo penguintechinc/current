@@ -1,5 +1,10 @@
 # Version History
 
+## v1.0.1.1768501253 - 2026-01-15 18:20:53 UTC
+
+### Patch Release
+- Bug fixes and minor improvements
+
 ## v1.0.0.1737727200 - 2025-01-24 17:20:00 UTC
 
 ### Initial Release
