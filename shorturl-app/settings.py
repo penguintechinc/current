@@ -10,7 +10,11 @@ APP_VERSION = "1.0.0"
 # Database configuration
 DB_TYPE = os.getenv("DB_TYPE", "sqlite")
 DB_CONNECTION = os.getenv("DB_CONNECTION", "/var/data/current/db.sqlite")
-DB_URI = f"{DB_TYPE}://{DB_CONNECTION}" if DB_TYPE != "sqlite" else f"sqlite://{DB_CONNECTION}"
+DB_URI = (
+    f"{DB_TYPE}://{DB_CONNECTION}"
+    if DB_TYPE != "sqlite"
+    else f"sqlite://{DB_CONNECTION}"
+)
 
 # Security settings
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production-please")

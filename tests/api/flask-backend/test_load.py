@@ -211,18 +211,26 @@ class LoadTester:
             # Health endpoints should respond in < 100ms avg
             if "/readyz" in result.endpoint or "/livez" in result.endpoint:
                 if result.avg_response_time > 100:
-                    print(f"  ✗ {result.endpoint}: Avg {result.avg_response_time:.0f}ms > 100ms threshold")
+                    print(
+                        f"  ✗ {result.endpoint}: Avg {result.avg_response_time:.0f}ms > 100ms threshold"
+                    )
                     thresholds_met = False
                 else:
-                    print(f"  ✓ {result.endpoint}: Avg {result.avg_response_time:.0f}ms < 100ms")
+                    print(
+                        f"  ✓ {result.endpoint}: Avg {result.avg_response_time:.0f}ms < 100ms"
+                    )
 
             # API endpoints should respond in < 500ms avg
             elif "/api/" in result.endpoint:
                 if result.avg_response_time > 500:
-                    print(f"  ✗ {result.endpoint}: Avg {result.avg_response_time:.0f}ms > 500ms threshold")
+                    print(
+                        f"  ✗ {result.endpoint}: Avg {result.avg_response_time:.0f}ms > 500ms threshold"
+                    )
                     thresholds_met = False
                 else:
-                    print(f"  ✓ {result.endpoint}: Avg {result.avg_response_time:.0f}ms < 500ms")
+                    print(
+                        f"  ✓ {result.endpoint}: Avg {result.avg_response_time:.0f}ms < 500ms"
+                    )
 
         return all_passed and thresholds_met
 
