@@ -9,7 +9,7 @@ from __future__ import annotations
 from quart import Blueprint, jsonify, request, g
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden
 
-from .auth import token_required
+from .auth import auth_required
 from .rbac import require_scope, get_user_scopes
 from .models import get_db
 
@@ -17,7 +17,7 @@ teams_bp = Blueprint('teams', __name__)
 
 
 @teams_bp.route('/teams', methods=['GET'])
-@token_required
+@auth_required
 @require_scope('teams:read')
 async def list_teams():
     """
@@ -43,7 +43,7 @@ async def list_teams():
 
 
 @teams_bp.route('/teams', methods=['POST'])
-@token_required
+@auth_required
 @require_scope('teams:write', 'teams:admin')
 async def create_team():
     """
@@ -94,7 +94,7 @@ async def create_team():
 
 
 @teams_bp.route('/teams/<int:team_id>', methods=['GET'])
-@token_required
+@auth_required
 @require_scope('teams:read', team_id_param='team_id')
 async def get_team(team_id: int):
     """
@@ -126,7 +126,7 @@ async def get_team(team_id: int):
 
 
 @teams_bp.route('/teams/<int:team_id>', methods=['PUT'])
-@token_required
+@auth_required
 @require_scope('teams:write', 'teams:admin', team_id_param='team_id')
 async def update_team(team_id: int):
     """
@@ -157,7 +157,7 @@ async def update_team(team_id: int):
 
 
 @teams_bp.route('/teams/<int:team_id>', methods=['DELETE'])
-@token_required
+@auth_required
 @require_scope('teams:admin', team_id_param='team_id')
 async def delete_team(team_id: int):
     """
@@ -179,7 +179,7 @@ async def delete_team(team_id: int):
 
 
 @teams_bp.route('/teams/<int:team_id>/members', methods=['POST'])
-@token_required
+@auth_required
 @require_scope('teams:write', 'teams:admin', team_id_param='team_id')
 async def add_team_member(team_id: int):
     """
@@ -252,7 +252,7 @@ async def add_team_member(team_id: int):
 
 
 @teams_bp.route('/teams/<int:team_id>/members/<int:user_id>', methods=['DELETE'])
-@token_required
+@auth_required
 @require_scope('teams:write', 'teams:admin', team_id_param='team_id')
 async def remove_team_member(team_id: int, user_id: int):
     """

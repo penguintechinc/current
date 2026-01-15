@@ -9,7 +9,7 @@ from __future__ import annotations
 from quart import Blueprint, jsonify, request, g
 from werkzeug.exceptions import BadRequest, NotFound
 
-from .auth import token_required
+from .auth import auth_required
 from .rbac import require_scope, SCOPES, ROLE_SCOPES, TEAM_ROLE_SCOPES, RESOURCE_ROLE_SCOPES
 from .models import get_db
 
@@ -17,7 +17,7 @@ roles_bp = Blueprint('roles', __name__)
 
 
 @roles_bp.route('/scopes', methods=['GET'])
-@token_required
+@auth_required
 async def list_scopes():
     """
     List all available scopes in the system.
@@ -38,7 +38,7 @@ async def list_scopes():
 
 
 @roles_bp.route('/roles', methods=['GET'])
-@token_required
+@auth_required
 async def list_roles():
     """
     List all roles with their assigned scopes.
@@ -97,7 +97,7 @@ async def list_roles():
 
 
 @roles_bp.route('/roles/custom', methods=['POST'])
-@token_required
+@auth_required
 @require_scope('users:admin', 'system:admin')
 async def create_custom_role():
     """
@@ -181,7 +181,7 @@ async def create_custom_role():
 
 
 @roles_bp.route('/roles/<int:role_id>', methods=['DELETE'])
-@token_required
+@auth_required
 @require_scope('users:admin', 'system:admin')
 async def delete_custom_role(role_id: int):
     """
@@ -211,7 +211,7 @@ async def delete_custom_role(role_id: int):
 
 
 @roles_bp.route('/users/<int:user_id>/roles', methods=['POST'])
-@token_required
+@auth_required
 @require_scope('users:admin')
 async def assign_role_to_user(user_id: int):
     """
@@ -283,7 +283,7 @@ async def assign_role_to_user(user_id: int):
 
 
 @roles_bp.route('/users/<int:user_id>/roles', methods=['GET'])
-@token_required
+@auth_required
 @require_scope('users:read')
 async def get_user_roles(user_id: int):
     """

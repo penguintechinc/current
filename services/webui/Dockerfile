@@ -7,13 +7,13 @@ FROM node:22-bookworm-slim AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY services/webui/package*.json ./
 
 # Install dependencies
 RUN npm ci
 
 # Copy source code
-COPY . .
+COPY services/webui/ .
 
 # Build the application
 RUN npm run build
@@ -27,7 +27,7 @@ WORKDIR /app
 RUN groupadd -r webui && useradd -r -g webui webui
 
 # Copy package files for production dependencies
-COPY package*.json ./
+COPY services/webui/package*.json ./
 
 # Install production dependencies only
 RUN npm ci --omit=dev && npm cache clean --force

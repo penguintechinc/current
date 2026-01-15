@@ -75,8 +75,8 @@ services:
   # WebUI (Node.js + React Frontend Shell)
   webui:
     build:
-      context: ./services/webui
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/webui/Dockerfile
     container_name: current-url-webui
     environment:
       - NODE_ENV=${NODE_ENV:-production}
