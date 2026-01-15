@@ -212,9 +212,13 @@ def _register_blueprints(app: Quart) -> None:
     from .auth import auth_bp
     from .hello import hello_bp
     from .users import users_bp
+    from .teams import teams_bp
+    from .roles import roles_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
     app.register_blueprint(users_bp, url_prefix="/api/v1/users")
+    app.register_blueprint(teams_bp, url_prefix="/api/v1")
+    app.register_blueprint(roles_bp, url_prefix="/api/v1")
     app.register_blueprint(hello_bp, url_prefix="/api/v1")
 
 

@@ -123,39 +123,123 @@ DB_URI=sqlite://storage.db
 
 ## Authentication & Authorization
 
-### Role Hierarchy
+### Three-Tier RBAC with OAuth2-Style Scopes
+
+Current implements a comprehensive Role-Based Access Control (RBAC) system with OAuth2-style scopes and three organizational levels:
+
+**Organizational Tiers:**
+1. **Global Level** - Organization-wide roles and permissions
+2. **Team Level** - Per-team access scopes
+3. **Resource Level** - Per-resource permissions
+
+All permissions are scope-based (e.g., `users:read`, `users:write`, `analytics:admin`) following OAuth2 patterns.
+
+### Available Scopes
+
+**User Management:**
+- `users:read` - Read user data
+- `users:write` - Create and update users
+- `users:admin` - Delete users and manage roles
+
+**Team Management:**
+- `teams:read` - Read team data
+- `teams:write` - Create and update teams
+- `teams:admin` - Delete teams and manage members
+
+**URL Management:**
+- `urls:read` - Read URL data
+- `urls:write` - Create and update URLs
+- `urls:delete` - Delete URLs
+- `urls:admin` - Manage all URLs
+
+**Analytics:**
+- `analytics:read` - Read analytics data
+- `analytics:admin` - Configure analytics settings
+
+**Settings:**
+- `settings:read` - Read application settings
+- `settings:write` - Modify application settings
+
+**System:**
+- `system:admin` - Full system administration
+
+### Global-Level Roles
 
 1. **Admin** (`admin`)
-   - Full system access
+   - **Scopes**: All scopes (full system access)
    - User management (create, update, delete users)
-   - Role assignment
+   - Role assignment and custom role creation
    - System configuration
-   - All URL operations (create, read, update, delete all URLs)
+   - Team management
+   - All URL operations across entire organization
    - Access to all analytics
 
 2. **Maintainer** (`maintainer`)
+   - **Scopes**: `users:read`, `teams:read`, `urls:read`, `urls:write`, `urls:delete`, `analytics:read`, `settings:read`
    - Read and write access to URLs
-   - Create and manage own URLs
-   - View analytics for own URLs
+   - View users and teams
    - Cannot manage users or roles
    - Cannot access system configuration
 
 3. **Viewer** (`viewer`)
-   - Read-only access
-   - View own URLs
-   - View analytics for own URLs
-   - Cannot create or modify URLs
+   - **Scopes**: `users:read`, `teams:read`, `urls:read`, `analytics:read`, `settings:read`
+   - Read-only access to all resources
+   - Cannot create or modify anything
+
+### Team-Level Roles
+
+Team-level roles apply permissions within a specific team context:
+
+1. **Team Admin** (`team_admin`)
+   - **Scopes**: `users:read`, `users:write`, `teams:read`, `teams:write`, `urls:read`, `urls:write`, `urls:delete`, `analytics:read`
+   - Full access within the team
+   - Can manage team members
+   - Can manage team URLs
+
+2. **Team Maintainer** (`team_maintainer`)
+   - **Scopes**: `users:read`, `teams:read`, `urls:read`, `urls:write`, `analytics:read`
+   - Read/write access within team
+   - Cannot manage team membership
+
+3. **Team Viewer** (`team_viewer`)
+   - **Scopes**: `users:read`, `teams:read`, `urls:read`, `analytics:read`
+   - Read-only access within team
+
+### Resource-Level Roles
+
+Resource-level roles apply to specific resources (e.g., individual URLs):
+
+1. **Owner** (`owner`)
+   - **Scopes**: `urls:read`, `urls:write`, `urls:delete`, `analytics:read`
+   - Full control over the resource
+
+2. **Editor** (`editor`)
+   - **Scopes**: `urls:read`, `urls:write`, `analytics:read`
+   - Can modify the resource
+
+3. **Resource Viewer** (`resource_viewer`)
+   - **Scopes**: `urls:read`, `analytics:read`
+   - Read-only access to the resource
+
+### Custom Roles
+
+Administrators can create custom roles with selected scopes:
+- Define role name and description
+- Select specific scopes from available list
+- Specify organizational level (global, team, or resource)
+- Assign to users at appropriate level
 
 ### Authentication Flow
 
 1. **Registration**: POST `/api/v1/auth/register`
    - Email validation required
    - Password strength requirements (min 8 chars, complexity)
-   - Default role: `viewer`
+   - Default role: `viewer` at global level
 
 2. **Login**: POST `/api/v1/auth/login`
    - Returns JWT access token and refresh token
    - Token expiry: 1 hour (access), 7 days (refresh)
+   - JWT includes user scopes for permission checks
 
 3. **Token Refresh**: POST `/api/v1/auth/refresh`
    - Requires valid refresh token
@@ -170,6 +254,32 @@ All authenticated endpoints require:
 ```
 Authorization: Bearer <jwt_token>
 ```
+
+Endpoints are protected by scope requirements using `@require_scope` decorator.
+
+### RBAC API Endpoints
+
+**Scopes Management:**
+- `GET /api/v1/scopes` - List all available scopes
+- `GET /api/v1/roles` - List all roles with their scopes (query: `?level=global|team|resource`)
+- `GET /api/v1/roles/<role_id>` - Get specific role details
+
+**Custom Roles:**
+- `POST /api/v1/roles/custom` - Create custom role (requires `users:admin` or `system:admin`)
+- `DELETE /api/v1/roles/<role_id>` - Delete custom role (requires `users:admin`)
+
+**Role Assignments:**
+- `POST /api/v1/users/<user_id>/roles` - Assign role to user at specific level (requires `users:admin`)
+- `GET /api/v1/users/<user_id>/roles` - Get all role assignments for user (requires `users:read`)
+
+**Teams:**
+- `GET /api/v1/teams` - List teams user has access to (requires `teams:read`)
+- `POST /api/v1/teams` - Create team (requires `teams:write`)
+- `GET /api/v1/teams/<team_id>` - Get team details (requires `teams:read`)
+- `PUT /api/v1/teams/<team_id>` - Update team (requires `teams:write`)
+- `DELETE /api/v1/teams/<team_id>` - Delete team (requires `teams:admin`)
+- `POST /api/v1/teams/<team_id>/members` - Add team member (requires `teams:write`)
+- `DELETE /api/v1/teams/<team_id>/members/<user_id>` - Remove team member (requires `teams:write`)
 
 ## API Versioning
 

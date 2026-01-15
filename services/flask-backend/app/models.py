@@ -90,6 +90,10 @@ def init_db(app: Quart) -> DAL:
     # Ensure default roles exist
     _ensure_default_roles(db)
 
+    # Initialize RBAC tables and scopes
+    from .rbac import init_rbac_tables
+    init_rbac_tables(db)
+
     # Store db instance in app
     app.config["db"] = db
 
@@ -222,7 +226,9 @@ def _ensure_default_roles(db: DAL) -> None:
     Ensure default roles exist in the database.
 
     Creates admin, maintainer, and viewer roles if they don't exist.
+    Also creates team-level and resource-level roles.
     """
+    # Global roles
     for role_name in VALID_ROLES:
         existing = db(db.auth_role.name == role_name).select().first()
         if not existing:
@@ -230,6 +236,29 @@ def _ensure_default_roles(db: DAL) -> None:
                 name=role_name,
                 description=ROLE_DESCRIPTIONS.get(role_name, ""),
             )
+
+    # Team-level roles
+    team_roles = {
+        'team_admin': 'Full access within team',
+        'team_maintainer': 'Read/write access within team',
+        'team_viewer': 'Read-only access within team',
+    }
+    for role_name, description in team_roles.items():
+        existing = db(db.auth_role.name == role_name).select().first()
+        if not existing:
+            db.auth_role.insert(name=role_name, description=description)
+
+    # Resource-level roles
+    resource_roles = {
+        'owner': 'Full control over specific resource',
+        'editor': 'Read/write on specific resource',
+        'resource_viewer': 'Read-only on specific resource',
+    }
+    for role_name, description in resource_roles.items():
+        existing = db(db.auth_role.name == role_name).select().first()
+        if not existing:
+            db.auth_role.insert(name=role_name, description=description)
+
     db.commit()
 
 
@@ -316,10 +345,31 @@ def create_user(
         fs_token_uniquifier=str(uuid.uuid4()),
     )
 
-    # Assign role
+    # Assign role (legacy table for Flask-Security compatibility)
     role_row = db(db.auth_role.name == role).select().first()
     if role_row:
         db.auth_user_roles.insert(user_id=user_id, role_id=role_row.id)
+
+        # Also assign role at global level in new RBAC system
+        # Define user_role_assignments table if not already defined
+        if 'user_role_assignments' not in db.tables:
+            db.define_table(
+                'user_role_assignments',
+                db.Field('user_id', 'reference auth_user'),
+                db.Field('role_id', 'reference auth_role'),
+                db.Field('scope_level', 'string', length=20),
+                db.Field('scope_id', 'integer'),
+                db.Field('created_at', 'datetime'),
+                migrate=False,
+            )
+
+        # Assign global-level role
+        db.user_role_assignments.insert(
+            user_id=user_id,
+            role_id=role_row.id,
+            scope_level='global',
+            scope_id=None,
+        )
 
     db.commit()
     return get_user_by_id(user_id)
