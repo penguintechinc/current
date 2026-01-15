@@ -58,9 +58,20 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     >
       {/* Header */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-dark-700">
-        {!collapsed && (
-          <span className="text-xl font-bold text-gold-gradient">WebUI</span>
-        )}
+        <Link
+          to="/"
+          className="flex items-center hover:opacity-80 transition-opacity"
+          title="Home"
+        >
+          {collapsed ? (
+            <img src="/logo192.png" alt="Current" className="w-8 h-8" />
+          ) : (
+            <div className="flex items-center space-x-2">
+              <img src="/logo192.png" alt="Current" className="w-8 h-8" />
+              <span className="text-xl font-bold text-gold-gradient">Current</span>
+            </div>
+          )}
+        </Link>
         <button
           onClick={onToggle}
           className="p-2 rounded-lg hover:bg-dark-800 text-gold-400"

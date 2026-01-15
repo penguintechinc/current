@@ -39,7 +39,12 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo/Title */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gold-gradient mb-2">WebUI Shell</h1>
+          <img
+            src="/logo-full.png"
+            alt="Current Logo"
+            className="w-64 mx-auto mb-4"
+          />
+          <h1 className="text-4xl font-bold text-gold-gradient mb-2">Current</h1>
           <p className="text-dark-400">Sign in to your account</p>
         </div>
 

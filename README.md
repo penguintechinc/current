@@ -5,21 +5,25 @@
 [![version](https://img.shields.io/badge/version-5.1.1-blue.svg)](https://semver.org)
 [![License](https://img.shields.io/badge/License-Limited%20AGPL3-blue.svg)](LICENSE.md)
 
+<div align="center">
+  <img src="docs/screenshots/logo.png" alt="Current Logo" width="400"/>
+
+  <h1>Current - URL Shortener & Management Platform</h1>
+  <p><em>Fast, Secure, Enterprise-Ready URL Shortening</em></p>
+</div>
+
 ```
- ____            _           _     _____                    _       _
-|  _ \ _ __ ___ (_) ___  ___| |_  |_   _|__ _ __ ___  _ __ | | __ _| |_ ___
-| |_) | '__/ _ \| |/ _ \/ __| __|   | |/ _ \ '_ ` _ \| '_ \| |/ _` | __/ _ \
-|  __/| | | (_) | |  __/ (__| |_    | |  __/ | | | | | |_) | | (_| | ||  __/
-|_|   |_|  \___/| |\___|\___|\__|   |_|\___|_| |_| |_| .__/|_|\__,_|\__\___|
-               _/ |                                  |_|
-              |__/
+  _____ _   _ ____  ____  _____ _   _ _____
+ / ____| | | |  _ \|  _ \| ____| \ | |_   _|
+| |    | | | | |_) | |_) |  _| |  \| | | |
+| |    | |_| |  _ <|  _ <| |___| |\  | | |
+ \____|\___/|_| \_\_| \_\_____|_| \_| |_|
+
 ```
 
-# 🏗️ Enterprise Project Template
+# Current - URL Shortener & Management Platform
 
-**The Ultimate Multi-Language Development Foundation**
-
-This comprehensive project template provides a production-ready foundation for enterprise software development, incorporating best practices from Penguin Tech Inc projects. Built with security, scalability, and developer experience at its core, it offers standardized tooling for Go, Python, and Node.js applications with integrated licensing, monitoring, and enterprise-grade infrastructure.
+A comprehensive URL shortener and management platform with enterprise features including custom aliases, analytics tracking, QR code generation, and role-based access control. Built with a modern three-container microservices architecture for scalability and performance.
 ## ✨ Why Choose This Template?
 
 ### 🏭 Enterprise-Ready Architecture
