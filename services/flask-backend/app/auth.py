@@ -16,12 +16,24 @@ from pydantic import ValidationError
 from quart import Blueprint, current_app, g, jsonify, request
 
 from .async_db import run_sync
-from .models import (get_user_by_email, get_user_by_id, is_refresh_token_valid,
-                     revoke_all_user_tokens, revoke_refresh_token,
-                     store_refresh_token)
-from .schemas import (LoginRequest, LogoutResponse, RefreshTokenRequest,
-                      RefreshTokenResponse, RegisterRequest, RegisterResponse,
-                      TokenResponse, UserResponse)
+from .models import (
+    get_user_by_email,
+    get_user_by_id,
+    is_refresh_token_valid,
+    revoke_all_user_tokens,
+    revoke_refresh_token,
+    store_refresh_token,
+)
+from .schemas import (
+    LoginRequest,
+    LogoutResponse,
+    RefreshTokenRequest,
+    RefreshTokenResponse,
+    RegisterRequest,
+    RegisterResponse,
+    TokenResponse,
+    UserResponse,
+)
 
 auth_bp = Blueprint("auth", __name__)
 

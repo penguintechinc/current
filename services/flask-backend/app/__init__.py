@@ -190,8 +190,7 @@ def _init_security(app: Quart, db: any) -> None:
 def _apply_security_headers(app: Quart) -> None:
     """Apply security headers to all responses."""
     try:
-        from py_libs.security.headers import (SecurityHeadersConfig,
-                                              build_headers)
+        from py_libs.security.headers import SecurityHeadersConfig, build_headers
 
         headers_config = SecurityHeadersConfig(
             hsts_enabled=not app.config.get("DEBUG", False),
@@ -269,9 +268,14 @@ def _register_health_endpoints(app: Quart) -> None:
 def _setup_prometheus(app: Quart) -> None:
     """Setup Prometheus metrics endpoint."""
     try:
-        from prometheus_client import (CONTENT_TYPE_LATEST, CollectorRegistry,
-                                       Counter, Histogram, generate_latest,
-                                       multiprocess)
+        from prometheus_client import (
+            CONTENT_TYPE_LATEST,
+            CollectorRegistry,
+            Counter,
+            Histogram,
+            generate_latest,
+            multiprocess,
+        )
 
         # Create metrics
         REQUEST_COUNT = Counter(

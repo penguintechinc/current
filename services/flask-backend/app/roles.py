@@ -11,8 +11,13 @@ from werkzeug.exceptions import BadRequest, NotFound
 
 from .auth import auth_required
 from .models import get_db
-from .rbac import (RESOURCE_ROLE_SCOPES, ROLE_SCOPES, SCOPES, TEAM_ROLE_SCOPES,
-                   require_scope)
+from .rbac import (
+    RESOURCE_ROLE_SCOPES,
+    ROLE_SCOPES,
+    SCOPES,
+    TEAM_ROLE_SCOPES,
+    require_scope,
+)
 
 roles_bp = Blueprint("roles", __name__)
 

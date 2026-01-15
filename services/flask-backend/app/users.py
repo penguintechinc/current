@@ -11,14 +11,28 @@ from pydantic import ValidationError
 from quart import Blueprint, jsonify, request
 
 from .async_db import run_sync
-from .auth import (admin_required, auth_required, get_current_user,
-                   hash_password)
-from .models import (VALID_ROLES, create_user, delete_user, get_user_by_email,
-                     get_user_by_id, list_users, update_user)
-from .schemas import (CreateUserRequest, PaginatedUsersResponse,
-                      PaginationMeta, RolesResponse, UpdateUserRequest,
-                      UserCreatedResponse, UserDeletedResponse,
-                      UserDetailResponse, UserListItem, UserUpdatedResponse)
+from .auth import admin_required, auth_required, get_current_user, hash_password
+from .models import (
+    VALID_ROLES,
+    create_user,
+    delete_user,
+    get_user_by_email,
+    get_user_by_id,
+    list_users,
+    update_user,
+)
+from .schemas import (
+    CreateUserRequest,
+    PaginatedUsersResponse,
+    PaginationMeta,
+    RolesResponse,
+    UpdateUserRequest,
+    UserCreatedResponse,
+    UserDeletedResponse,
+    UserDetailResponse,
+    UserListItem,
+    UserUpdatedResponse,
+)
 
 users_bp = Blueprint("users", __name__)
 
