@@ -53,7 +53,8 @@ class CreateUserRequest(BaseModel):
     def validate_password_strength(cls, v: str) -> str:
         """Validate password meets strength requirements."""
         try:
-            from py_libs.validation.password import IsStrongPassword, PasswordOptions
+            from py_libs.validation.password import (IsStrongPassword,
+                                                     PasswordOptions)
 
             validator = IsStrongPassword(options=PasswordOptions.moderate())
             result = validator(v)
@@ -109,7 +110,8 @@ class UpdateUserRequest(BaseModel):
         if v is None:
             return v
         try:
-            from py_libs.validation.password import IsStrongPassword, PasswordOptions
+            from py_libs.validation.password import (IsStrongPassword,
+                                                     PasswordOptions)
 
             validator = IsStrongPassword(options=PasswordOptions.moderate())
             result = validator(v)

@@ -14,7 +14,7 @@ from __future__ import annotations
 from functools import wraps
 from typing import Any, Callable, Optional
 
-from quart import request, g
+from quart import g, request
 from werkzeug.exceptions import Forbidden
 
 # OAuth2-style scope definitions

@@ -71,7 +71,8 @@ class RegisterRequest(BaseModel):
         """Validate password meets strength requirements."""
         # Import here to avoid circular imports
         try:
-            from py_libs.validation.password import IsStrongPassword, PasswordOptions
+            from py_libs.validation.password import (IsStrongPassword,
+                                                     PasswordOptions)
 
             validator = IsStrongPassword(options=PasswordOptions.moderate())
             result = validator(v)

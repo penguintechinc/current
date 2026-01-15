@@ -1,7 +1,7 @@
-import unittest
-import tempfile
 import os
 import sys
+import tempfile
+import unittest
 
 
 class TestIntegration(unittest.TestCase):

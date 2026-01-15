@@ -1,11 +1,12 @@
-from py4web import request, response, redirect, URL, abort
-from py4web.core import Fixture
-from functools import wraps
-import hashlib
-import secrets
 import datetime
-import sys
+import hashlib
 import os
+import secrets
+import sys
+from functools import wraps
+
+from py4web import URL, abort, redirect, request, response
+from py4web.core import Fixture
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))

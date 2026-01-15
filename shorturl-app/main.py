@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 
 import asyncio
-import sys
 import os
+import sys
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 
+from admin_portal import AdminPortal
+from apps.shorturl.utils.analytics import Analytics
+from apps.shorturl.utils.certificates import CertificateManager
 # Import servers
 from proxy_server import ProxyServer
-from admin_portal import AdminPortal
-from apps.shorturl.utils.certificates import CertificateManager
-from apps.shorturl.utils.analytics import Analytics
-from apps.shorturl.models import db
 from settings import DOMAIN
+
+from apps.shorturl.models import db
 
 
 def init_database():

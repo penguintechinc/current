@@ -1,7 +1,7 @@
-import unittest
-import string
-import random
 import hashlib
+import random
+import string
+import unittest
 
 
 class TestUtilityFunctions(unittest.TestCase):

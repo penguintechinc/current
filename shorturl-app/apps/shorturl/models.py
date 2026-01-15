@@ -1,8 +1,9 @@
-from py4web import DAL, Field
-from pydal.validators import *
 import datetime
 import os
 import sys
+
+from py4web import DAL, Field
+from pydal.validators import *
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from settings import DB_URI

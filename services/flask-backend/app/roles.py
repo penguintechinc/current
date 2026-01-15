@@ -6,18 +6,13 @@ Provides endpoints for managing custom roles and viewing available scopes.
 
 from __future__ import annotations
 
-from quart import Blueprint, jsonify, request, g
+from quart import Blueprint, g, jsonify, request
 from werkzeug.exceptions import BadRequest, NotFound
 
 from .auth import auth_required
-from .rbac import (
-    require_scope,
-    SCOPES,
-    ROLE_SCOPES,
-    TEAM_ROLE_SCOPES,
-    RESOURCE_ROLE_SCOPES,
-)
 from .models import get_db
+from .rbac import (RESOURCE_ROLE_SCOPES, ROLE_SCOPES, SCOPES, TEAM_ROLE_SCOPES,
+                   require_scope)
 
 roles_bp = Blueprint("roles", __name__)
 

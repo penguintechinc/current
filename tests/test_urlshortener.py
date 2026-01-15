@@ -1,8 +1,8 @@
-import unittest
-import sys
 import os
-import tempfile
 import shutil
+import sys
+import tempfile
+import unittest
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../shorturl-app"))
 

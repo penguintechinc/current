@@ -1,9 +1,10 @@
+import datetime
+import os
+import sys
+
 import geoip2.database
 import geoip2.errors
 from geolite2 import geolite2
-import datetime
-import sys
-import os
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))

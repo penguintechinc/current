@@ -190,7 +190,8 @@ def _init_security(app: Quart, db: any) -> None:
 def _apply_security_headers(app: Quart) -> None:
     """Apply security headers to all responses."""
     try:
-        from py_libs.security.headers import SecurityHeadersConfig, build_headers
+        from py_libs.security.headers import (SecurityHeadersConfig,
+                                              build_headers)
 
         headers_config = SecurityHeadersConfig(
             hsts_enabled=not app.config.get("DEBUG", False),
@@ -217,9 +218,9 @@ def _register_blueprints(app: Quart) -> None:
     """Register application blueprints."""
     from .auth import auth_bp
     from .hello import hello_bp
-    from .users import users_bp
-    from .teams import teams_bp
     from .roles import roles_bp
+    from .teams import teams_bp
+    from .users import users_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
     app.register_blueprint(users_bp, url_prefix="/api/v1/users")
@@ -268,14 +269,9 @@ def _register_health_endpoints(app: Quart) -> None:
 def _setup_prometheus(app: Quart) -> None:
     """Setup Prometheus metrics endpoint."""
     try:
-        from prometheus_client import (
-            CONTENT_TYPE_LATEST,
-            CollectorRegistry,
-            Counter,
-            Histogram,
-            generate_latest,
-            multiprocess,
-        )
+        from prometheus_client import (CONTENT_TYPE_LATEST, CollectorRegistry,
+                                       Counter, Histogram, generate_latest,
+                                       multiprocess)
 
         # Create metrics
         REQUEST_COUNT = Counter(
@@ -292,8 +288,9 @@ def _setup_prometheus(app: Quart) -> None:
         @app.before_request
         async def before_request():
             """Record request start time."""
-            from quart import g
             import time
+
+            from quart import g
 
             g.start_time = time.time()
 

@@ -1,16 +1,17 @@
-import re
 import datetime
 import html
+import os
+import re
+import sys
 import urllib.parse
 from functools import wraps
-import sys
-import os
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 )
+from settings import RATE_LIMIT_ENABLED, RATE_LIMIT_PER_SECOND
+
 from apps.shorturl.models import db
-from settings import RATE_LIMIT_PER_SECOND, RATE_LIMIT_ENABLED
 
 
 class Security:
@@ -183,7 +184,7 @@ def rate_limit(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        from py4web import request, abort
+        from py4web import abort, request
 
         # Get client IP
         ip = request.environ.get(

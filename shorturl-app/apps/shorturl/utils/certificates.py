@@ -1,16 +1,18 @@
-import os
-import subprocess
 import datetime
+import os
 import ssl
-import OpenSSL.crypto
-from pathlib import Path
+import subprocess
 import sys
+from pathlib import Path
+
+import OpenSSL.crypto
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 )
+from settings import ADMIN_EMAIL, CERT_PATH, DOMAIN
+
 from apps.shorturl.models import db
-from settings import DOMAIN, ADMIN_EMAIL, CERT_PATH
 
 
 class CertificateManager:

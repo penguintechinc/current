@@ -10,11 +10,12 @@ Tests basic functionality to ensure the application is working:
 5. WebUI loads
 """
 
-import requests
 import subprocess
-import time
 import sys
+import time
 from typing import Dict, List, Tuple
+
+import requests
 
 # Configuration
 FLASK_URL = "http://localhost:5002"

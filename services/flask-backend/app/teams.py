@@ -6,12 +6,12 @@ Implements team CRUD operations with scope-based permissions.
 
 from __future__ import annotations
 
-from quart import Blueprint, jsonify, request, g
-from werkzeug.exceptions import BadRequest, NotFound, Forbidden
+from quart import Blueprint, g, jsonify, request
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 
 from .auth import auth_required
-from .rbac import require_scope, get_user_scopes
 from .models import get_db
+from .rbac import get_user_scopes, require_scope
 
 teams_bp = Blueprint("teams", __name__)
 

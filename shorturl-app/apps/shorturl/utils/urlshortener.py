@@ -1,17 +1,20 @@
-import string
-import random
-import qrcode
-from io import BytesIO
 import base64
-import sys
 import os
+import random
+import string
+import sys
+from io import BytesIO
+
+import qrcode
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 )
-from apps.shorturl.models import db
 from apps.shorturl.utils.security import Security
-from settings import DEFAULT_SHORT_LENGTH, MAX_CUSTOM_LENGTH, RESERVED_PATHS, DOMAIN
+from settings import (DEFAULT_SHORT_LENGTH, DOMAIN, MAX_CUSTOM_LENGTH,
+                      RESERVED_PATHS)
+
+from apps.shorturl.models import db
 
 
 class URLShortener:

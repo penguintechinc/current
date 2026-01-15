@@ -1,8 +1,8 @@
-import unittest
-import sys
+import html
 import os
 import re
-import html
+import sys
+import unittest
 import urllib.parse
 
 
