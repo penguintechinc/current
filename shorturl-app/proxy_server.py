@@ -10,12 +10,11 @@ from aiohttp import web
 from user_agents import parse
 
 sys.path.append(os.path.dirname(__file__))
+from apps.shorturl.models import db
 from apps.shorturl.utils.analytics import Analytics
 from apps.shorturl.utils.security import RateLimiter
 from apps.shorturl.utils.urlshortener import URLShortener
 from settings import CERT_PATH, DOMAIN, PROXY_HTTP_PORT, PROXY_HTTPS_PORT
-
-from apps.shorturl.models import db
 
 
 class ProxyServer:

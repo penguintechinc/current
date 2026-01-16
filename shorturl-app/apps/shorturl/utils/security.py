@@ -9,9 +9,8 @@ from functools import wraps
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 )
-from settings import RATE_LIMIT_ENABLED, RATE_LIMIT_PER_SECOND
-
 from apps.shorturl.models import db
+from settings import RATE_LIMIT_ENABLED, RATE_LIMIT_PER_SECOND
 
 
 class Security:

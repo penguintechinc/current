@@ -10,9 +10,8 @@ import OpenSSL.crypto
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 )
-from settings import ADMIN_EMAIL, CERT_PATH, DOMAIN
-
 from apps.shorturl.models import db
+from settings import ADMIN_EMAIL, CERT_PATH, DOMAIN
 
 
 class CertificateManager:

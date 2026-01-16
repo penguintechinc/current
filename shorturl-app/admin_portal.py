@@ -8,14 +8,13 @@ import aiohttp_cors
 from aiohttp import web
 
 sys.path.append(os.path.dirname(__file__))
+from apps.shorturl.models import db
 from apps.shorturl.utils.analytics import Analytics
 from apps.shorturl.utils.auth import auth, requires_role
 from apps.shorturl.utils.certificates import CertificateManager
 from apps.shorturl.utils.security import Security, rate_limit
 from apps.shorturl.utils.urlshortener import URLShortener
 from settings import ADMIN_HTTPS_PORT, CERT_PATH
-
-from apps.shorturl.models import db
 
 
 class AdminPortal:

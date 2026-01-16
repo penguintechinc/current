@@ -10,10 +10,9 @@ import qrcode
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 )
+from apps.shorturl.models import db
 from apps.shorturl.utils.security import Security
 from settings import DEFAULT_SHORT_LENGTH, DOMAIN, MAX_CUSTOM_LENGTH, RESERVED_PATHS
-
-from apps.shorturl.models import db
 
 
 class URLShortener:
