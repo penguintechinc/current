@@ -1,4 +1,5 @@
 import os
+import tempfile
 
 from dotenv import load_dotenv
 
@@ -10,7 +11,17 @@ APP_VERSION = "1.0.0"
 
 # Database configuration
 DB_TYPE = os.getenv("DB_TYPE", "sqlite")
-DB_CONNECTION = os.getenv("DB_CONNECTION", "/var/data/current/db.sqlite")
+
+# Use /var/data/current for production, but fall back to temp dir if not writable
+default_db_path = "/var/data/current/db.sqlite"
+if DB_TYPE == "sqlite" and not os.path.exists(os.path.dirname(default_db_path)):
+    try:
+        os.makedirs(os.path.dirname(default_db_path), exist_ok=True)
+    except (OSError, PermissionError):
+        # Fall back to temp directory for testing/development
+        default_db_path = os.path.join(tempfile.gettempdir(), "current_test.sqlite")
+
+DB_CONNECTION = os.getenv("DB_CONNECTION", default_db_path)
 DB_URI = (
     f"{DB_TYPE}://{DB_CONNECTION}"
     if DB_TYPE != "sqlite"
