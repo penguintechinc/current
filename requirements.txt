@@ -37,6 +37,8 @@ email-validator==2.2.0
 # Utilities
 python-dateutil==2.9.0.post0
 pytz==2024.2
+qrcode==8.0
+Pillow==11.1.0
 
 # Development Dependencies (optional)
 pytest==8.3.4
