@@ -1,6 +1,6 @@
 # Core Framework
 py4web==1.20251212.1
-pydal==20241031.1
+pydal==20260110.1
 
 # Database Drivers
 psycopg2-binary==2.9.10
