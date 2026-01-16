@@ -1,5 +1,5 @@
 # Core Framework
-py4web==1.20241127.1
+py4web==1.20251212.1
 pydal==20241031.1
 
 # Database Drivers
