@@ -1,0 +1,273 @@
+---
+# Namespace for Current beta deployment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: current-beta
+  labels:
+    app.kubernetes.io/name: current
+    environment: beta
+
+---
+# ConfigMap for shared configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: current-config
+  namespace: current-beta
+data:
+  DB_TYPE: "postgresql"
+  NODE_ENV: "production"
+  RELEASE_MODE: "false"  # Development mode for beta
+  PRODUCT_NAME: "current-url-shortener"
+  LICENSE_SERVER_URL: "https://license.penguintech.io"
+
+---
+# Secret for sensitive data (update with actual values)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: current-secrets
+  namespace: current-beta
+type: Opaque
+stringData:
+  SECRET_KEY: "change-this-secret-key-in-production"
+  SECURITY_PASSWORD_SALT: "change-this-salt-in-production"
+  DB_URI: "postgresql://current:current@postgres:5432/current"
+  LICENSE_KEY: "PENG-DEMO-DEMO-DEMO-DEMO-DEMO"
+
+---
+# Flask Backend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-backend
+  namespace: current-beta
+  labels:
+    app: current
+    component: flask-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: current
+      component: flask-backend
+  template:
+    metadata:
+      labels:
+        app: current
+        component: flask-backend
+    spec:
+      containers:
+      - name: flask-backend
+        image: registry-dal2.penguintech.io/current/flask-backend:v1.0.0-beta
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+          name: http
+        env:
+        - name: DB_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: current-config
+              key: DB_TYPE
+        - name: RELEASE_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: current-config
+              key: RELEASE_MODE
+        - name: PRODUCT_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: current-config
+              key: PRODUCT_NAME
+        - name: LICENSE_SERVER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: current-config
+              key: LICENSE_SERVER_URL
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: current-secrets
+              key: SECRET_KEY
+        - name: SECURITY_PASSWORD_SALT
+          valueFrom:
+            secretKeyRef:
+              name: current-secrets
+              key: SECURITY_PASSWORD_SALT
+        - name: DB_URI
+          valueFrom:
+            secretKeyRef:
+              name: current-secrets
+              key: DB_URI
+        - name: LICENSE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: current-secrets
+              key: LICENSE_KEY
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+
+---
+# Flask Backend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-backend
+  namespace: current-beta
+  labels:
+    app: current
+    component: flask-backend
+spec:
+  type: ClusterIP
+  selector:
+    app: current
+    component: flask-backend
+  ports:
+  - port: 5000
+    targetPort: 5000
+    protocol: TCP
+    name: http
+
+---
+# WebUI Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webui
+  namespace: current-beta
+  labels:
+    app: current
+    component: webui
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: current
+      component: webui
+  template:
+    metadata:
+      labels:
+        app: current
+        component: webui
+    spec:
+      containers:
+      - name: webui
+        image: registry-dal2.penguintech.io/current/webui:v1.0.0-beta
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: current-config
+              key: NODE_ENV
+        - name: FLASK_API_URL
+          value: "http://flask-backend:5000"
+        - name: PORT
+          value: "3000"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+---
+# WebUI Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: webui
+  namespace: current-beta
+  labels:
+    app: current
+    component: webui
+spec:
+  type: ClusterIP
+  selector:
+    app: current
+    component: webui
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+
+---
+# Ingress for external access
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: current-ingress
+  namespace: current-beta
+  labels:
+    app: current
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - current.penguintech.io
+    secretName: current-tls
+  rules:
+  - host: current.penguintech.io
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: flask-backend
+            port:
+              number: 5000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: webui
+            port:
+              number: 3000
