@@ -41,9 +41,6 @@ prometheus-client==0.21.1
 # HTTP Client
 httpx==0.28.1
 
-# Shared libraries (local install)
--e /shared/py_libs
-
 # Development
 pytest==8.3.4
 pytest-cov==6.0.0
