@@ -63,7 +63,11 @@
     "prettier": "^3.4.2",
     "typescript": "^5.7.2",
     "ts-node": "^10.9.2",
-    "supertest": "^7.0.0"
+    "supertest": "^7.2.2"
+  },
+  "overrides": {
+    "qs": "^6.14.1",
+    "safer-buffer": "^2.1.2"
   },
   "keywords": [
     "penguintech",
