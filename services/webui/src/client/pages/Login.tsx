@@ -97,7 +97,7 @@ export default function Login() {
 
         {/* Footer */}
         <p className="text-center text-sm text-dark-500 mt-6">
-          Penguin Tech Inc. &copy; {new Date().getFullYear()}
+          Penguin Technologies Inc. &copy; {new Date().getFullYear()}
         </p>
       </div>
     </div>

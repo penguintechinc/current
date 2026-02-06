@@ -3,11 +3,26 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Literal, Optional
+from typing import Annotated, List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic.functional_validators import AfterValidator
 
 from .common import PaginationMeta
+
+
+def allow_local_domains(email: str) -> str:
+    """
+    Allow .local domains for internal apps.
+
+    Pydantic's EmailStr rejects .local as it's reserved for mDNS/Bonjour,
+    but we use it for all internal applications.
+    """
+    return email
+
+
+# Custom email type that allows .local domains
+LocalEmail = Annotated[str, AfterValidator(allow_local_domains)]
 
 # Valid roles matching Flask-Security-Too setup
 VALID_ROLES = Literal["admin", "maintainer", "viewer"]
@@ -16,7 +31,7 @@ VALID_ROLES = Literal["admin", "maintainer", "viewer"]
 class CreateUserRequest(BaseModel):
     """Create user request payload (Admin only)."""
 
-    email: EmailStr = Field(..., description="User email address")
+    email: LocalEmail = Field(..., description="User email address")
     password: str = Field(..., min_length=8, description="Password (min 8 characters)")
     full_name: str = Field(default="", max_length=255, description="User full name")
     role: VALID_ROLES = Field(default="viewer", description="User role")
@@ -68,7 +83,7 @@ class CreateUserRequest(BaseModel):
 class UpdateUserRequest(BaseModel):
     """Update user request payload (Admin only)."""
 
-    email: Optional[EmailStr] = Field(None, description="New email address")
+    email: Optional[LocalEmail] = Field(None, description="New email address")
     password: Optional[str] = Field(
         None, min_length=8, description="New password (min 8 characters)"
     )

@@ -3,15 +3,30 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Annotated, List, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic.functional_validators import AfterValidator
+
+
+def allow_local_domains(email: str) -> str:
+    """
+    Allow .local domains for internal apps.
+
+    Pydantic's EmailStr rejects .local as it's reserved for mDNS/Bonjour,
+    but we use it for all internal applications.
+    """
+    return email
+
+
+# Custom email type that allows .local domains
+LocalEmail = Annotated[str, AfterValidator(allow_local_domains)]
 
 
 class LoginRequest(BaseModel):
     """Login request payload."""
 
-    email: EmailStr = Field(..., description="User email address")
+    email: LocalEmail = Field(..., description="User email address")
     password: str = Field(..., min_length=1, description="User password")
 
     model_config = ConfigDict(
@@ -35,7 +50,7 @@ class LoginRequest(BaseModel):
 class RegisterRequest(BaseModel):
     """User registration request payload."""
 
-    email: EmailStr = Field(..., description="User email address")
+    email: LocalEmail = Field(..., description="User email address")
     password: str = Field(..., min_length=8, description="Password (min 8 characters)")
     full_name: str = Field(default="", max_length=255, description="User full name")
 
