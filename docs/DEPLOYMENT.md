@@ -21,7 +21,7 @@ docker-compose up -d
 
 4. **Access admin portal**:
    - URL: https://your-domain.com:9443
-   - Default login: admin@localhost / admin123
+   - Default login: admin@localhost.local / admin123
 
 ## Production Deployment
 
@@ -101,7 +101,7 @@ docker-compose logs -f shorturl
 
 6. **First Login**:
    - Access: https://your-domain.com:9443
-   - Login: admin@localhost / admin123
+   - Login: admin@localhost.local / admin123
    - **Immediately change the password!**
 
 ## Database Options

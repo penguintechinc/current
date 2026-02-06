@@ -92,13 +92,13 @@ setup-git-hooks: ## Setup - Install Git pre-commit hooks
 # Development Commands
 dev: ## Development - Start development environment
 	@echo "$(BLUE)Starting development environment...$(RESET)"
-	@docker-compose up -d postgres redis
+	@docker compose up -d postgres redis
 	@sleep 5
 	@$(MAKE) dev-services
 
 dev-services: ## Development - Start all services for development
 	@echo "$(BLUE)Starting development services...$(RESET)"
-	@trap 'docker-compose down' INT; \
+	@trap 'docker compose down' INT; \
 	concurrently --names "API,Web-Python,Web-Node" --prefix name --kill-others \
 		"$(MAKE) dev-api" \
 		"$(MAKE) dev-web-python" \
@@ -117,13 +117,13 @@ dev-web-node: ## Development - Start Node.js web app in development mode
 	@cd web && npm run dev
 
 dev-db: ## Development - Start only database services
-	@docker-compose up -d postgres redis
+	@docker compose up -d postgres redis
 
 dev-monitoring: ## Development - Start monitoring services
-	@docker-compose up -d prometheus grafana
+	@docker compose up -d prometheus grafana
 
 dev-full: ## Development - Start full development stack
-	@docker-compose up -d
+	@docker compose up -d
 
 # Testing Commands
 test: ## Testing - Run all tests
@@ -148,8 +148,8 @@ test-node: ## Testing - Run Node.js tests
 
 test-integration: ## Testing - Run integration tests
 	@echo "$(BLUE)Running integration tests...$(RESET)"
-	@docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
-	@docker-compose -f docker-compose.test.yml down
+	@docker compose -f docker compose.test.yml up --build --abort-on-container-exit
+	@docker compose -f docker compose.test.yml down
 
 test-coverage: ## Testing - Generate coverage reports
 	@$(MAKE) test
@@ -199,11 +199,11 @@ docker-push: ## Docker - Push Docker images to registry
 	@docker push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME)-python:$(VERSION)
 
 docker-run: ## Docker - Run application with Docker Compose
-	@docker-compose up --build
+	@docker compose up --build
 
 docker-clean: ## Docker - Clean up Docker resources
 	@echo "$(BLUE)Cleaning up Docker resources...$(RESET)"
-	@docker-compose down -v
+	@docker compose down -v
 	@docker system prune -f
 
 # Code Quality Commands
@@ -260,8 +260,8 @@ db-seed: ## Database - Seed database with test data
 db-reset: ## Database - Reset database (WARNING: destroys data)
 	@echo "$(RED)WARNING: This will destroy all data!$(RESET)"
 	@read -p "Are you sure? (y/N): " confirm && [ "$$confirm" = "y" ]
-	@docker-compose down -v
-	@docker-compose up -d postgres redis
+	@docker compose down -v
+	@docker compose up -d postgres redis
 	@sleep 5
 	@$(MAKE) db-migrate
 	@$(MAKE) db-seed
@@ -269,11 +269,11 @@ db-reset: ## Database - Reset database (WARNING: destroys data)
 db-backup: ## Database - Create database backup
 	@echo "$(BLUE)Creating database backup...$(RESET)"
 	@mkdir -p backups
-	@docker-compose exec postgres pg_dump -U postgres project_template > backups/backup-$(shell date +%Y%m%d-%H%M%S).sql
+	@docker compose exec postgres pg_dump -U postgres project_template > backups/backup-$(shell date +%Y%m%d-%H%M%S).sql
 
 db-restore: ## Database - Restore database from backup (requires BACKUP_FILE)
 	@echo "$(BLUE)Restoring database from $(BACKUP_FILE)...$(RESET)"
-	@docker-compose exec -T postgres psql -U postgres project_template < $(BACKUP_FILE)
+	@docker compose exec -T postgres psql -U postgres project_template < $(BACKUP_FILE)
 
 # License Commands
 license-validate: ## License - Validate license configuration
@@ -321,16 +321,16 @@ health: ## Health - Check service health
 	@curl -f http://localhost:3000/health || echo "$(RED)Node web health check failed$(RESET)"
 
 logs: ## Logs - Show service logs
-	@docker-compose logs -f
+	@docker compose logs -f
 
 logs-api: ## Logs - Show API logs
-	@docker-compose logs -f api
+	@docker compose logs -f api
 
 logs-web: ## Logs - Show web logs
-	@docker-compose logs -f web-python web-node
+	@docker compose logs -f web-python web-node
 
 logs-db: ## Logs - Show database logs
-	@docker-compose logs -f postgres redis
+	@docker compose logs -f postgres redis
 
 # Cleanup Commands
 clean: ## Clean - Clean build artifacts and caches

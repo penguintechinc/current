@@ -10,7 +10,7 @@ POST /api/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin@localhost",
+  "email": "admin@localhost.local",
   "password": "admin123"
 }
 ```
@@ -21,7 +21,7 @@ Content-Type: application/json
   "success": true,
   "user": {
     "id": 1,
-    "email": "admin@localhost",
+    "email": "admin@localhost.local",
     "first_name": "Admin",
     "last_name": "User",
     "role": "admin"

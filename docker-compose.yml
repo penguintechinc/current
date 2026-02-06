@@ -54,7 +54,7 @@ services:
       - DB_USER=${POSTGRES_USER:-app_user}
       - DB_PASS=${POSTGRES_PASSWORD:-password}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-password}@redis:6379/0
-      - DEFAULT_ADMIN_EMAIL=${DEFAULT_ADMIN_EMAIL:-admin@example.com}
+      - DEFAULT_ADMIN_EMAIL=${DEFAULT_ADMIN_EMAIL:-admin@localhost.local}
       - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD:-admin123}
     ports:
       - "${FLASK_PORT:-5002}:5000"

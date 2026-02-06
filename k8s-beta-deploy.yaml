@@ -60,7 +60,7 @@ spec:
     spec:
       containers:
       - name: flask-backend
-        image: registry-dal2.penguintech.io/current/flask-backend:v1.0.0-beta
+        image: registry-dal2.penguintech.io/current/flask-backend:latest-beta
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
@@ -175,7 +175,7 @@ spec:
     spec:
       containers:
       - name: webui
-        image: registry-dal2.penguintech.io/current/webui:v1.0.0-beta
+        image: registry-dal2.penguintech.io/current/webui:latest-beta
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
@@ -246,13 +246,12 @@ metadata:
     app: current
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: nginx
   tls:
   - hosts:
     - current.penguintech.io
-    secretName: current-tls
+    secretName: penguintech-wildcard-tls
   rules:
   - host: current.penguintech.io
     http:

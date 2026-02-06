@@ -157,7 +157,7 @@ class PaginatedUsersResponse(BaseModel):
                 "users": [
                     {
                         "id": 1,
-                        "email": "admin@example.com",
+                        "email": "admin@localhost.local",
                         "full_name": "Admin User",
                         "role": "admin",
                         "is_active": True,
