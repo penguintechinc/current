@@ -182,7 +182,7 @@ You're in! The WebUI is serving. Behind the scenes:
 # Login and get a token
 curl -X POST http://localhost:5000/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@localhost.local","password":"admin123"}'
+  -d '{"email":"admin@example.com","password":"admin"}'
 
 # Use token to get users
 curl -X GET http://localhost:5000/api/v1/users \
