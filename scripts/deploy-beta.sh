@@ -14,7 +14,7 @@ RELEASE_NAME="current"
 CHART_PATH="$PROJECT_ROOT/k8s/helm/current"
 VALUES_FILE="$CHART_PATH/values-beta.yaml"
 IMAGE_REGISTRY="registry-dal2.penguintech.io"
-APP_HOST="current.penguintech.io"
+APP_HOST="current.penguintech.cloud"
 
 # Default flags
 DRY_RUN=0

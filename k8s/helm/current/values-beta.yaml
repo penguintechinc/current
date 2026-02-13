@@ -79,7 +79,7 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
   hosts:
-    - host: current.penguintech.io
+    - host: current.penguintech.cloud
       paths:
         - path: /
           pathType: Prefix
@@ -90,7 +90,7 @@ ingress:
   tls:
     - secretName: current-beta-tls
       hosts:
-        - current.penguintech.io
+        - current.penguintech.cloud
 
 # HPA
 hpa:
