@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "current.fullname" . }}-config
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "current.labels" . | nindent 4 }}
+data:
+  DB_TYPE: {{ .Values.flaskBackend.env.DB_TYPE | default "postgres" | quote }}
+  DB_HOST: {{ include "current.fullname" . }}-postgresql
+  DB_PORT: "5432"
+  DB_NAME: {{ .Values.postgresql.auth.database | default "app_db" | quote }}
+  REDIS_URL: {{ .Values.flaskBackend.env.REDIS_URL | default "redis://current-redis-master:6379/0" | quote }}
+  FLASK_API_URL: {{ .Values.webui.env.FLASK_API_URL | default (printf "http://%s-flask-backend:%d" (include "current.fullname" .) (.Values.flaskBackend.service.port | int)) | quote }}

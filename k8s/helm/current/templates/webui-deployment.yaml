@@ -1,0 +1,70 @@
+{{- if .Values.webui.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "current.fullname" . }}-webui
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "current.labels" . | nindent 4 }}
+    app.kubernetes.io/component: webui
+spec:
+  replicas: {{ .Values.webui.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "current.webui.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "current.webui.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: webui
+        image: "{{ .Values.webui.image.repository }}:{{ .Values.webui.image.tag }}"
+        imagePullPolicy: {{ .Values.webui.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.webui.service.targetPort }}
+          protocol: TCP
+        env:
+        - name: NODE_ENV
+          value: {{ .Values.webui.env.NODE_ENV | default "production" | quote }}
+        - name: PORT
+          value: "3000"
+        - name: FLASK_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "current.fullname" . }}-config
+              key: FLASK_API_URL
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.webui.healthCheck.path }}
+            port: http
+          initialDelaySeconds: {{ .Values.webui.healthCheck.initialDelaySeconds }}
+          periodSeconds: {{ .Values.webui.healthCheck.periodSeconds }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.webui.healthCheck.path }}
+            port: http
+          initialDelaySeconds: {{ .Values.webui.healthCheck.initialDelaySeconds }}
+          periodSeconds: {{ .Values.webui.healthCheck.periodSeconds }}
+        resources:
+          {{- toYaml .Values.webui.resources | nindent 10 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "current.fullname" . }}-webui
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "current.labels" . | nindent 4 }}
+    app.kubernetes.io/component: webui
+spec:
+  type: {{ .Values.webui.service.type }}
+  ports:
+  - port: {{ .Values.webui.service.port }}
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    {{- include "current.webui.selectorLabels" . | nindent 4 }}
+{{- end }}

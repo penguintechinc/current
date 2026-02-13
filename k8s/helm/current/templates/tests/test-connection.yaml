@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "current.fullname" . }}-test-connection"
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "current.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "current.fullname" . }}-flask-backend:{{ .Values.flaskBackend.service.port }}/healthz']
+  restartPolicy: Never

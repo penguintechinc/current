@@ -1,0 +1,46 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: current-beta
+
+namespace: current-beta
+
+namePrefix: beta-
+
+commonLabels:
+  environment: beta
+
+bases:
+  - ../../base
+
+replicas:
+  - name: flask-backend
+    count: 2
+  - name: webui
+    count: 2
+
+images:
+  - name: registry-dal2.penguintech.io/current-flask-backend
+    newTag: latest
+  - name: registry-dal2.penguintech.io/current-webui
+    newTag: latest
+
+configMapGenerator:
+  - name: current-config
+    behavior: merge
+    literals:
+      - LOG_LEVEL=INFO
+      - RELEASE_MODE=false
+
+secretGenerator:
+  - name: current-secrets
+    behavior: merge
+    literals:
+      - DB_USER=betauser
+      - DB_PASS=betapass
+      - SECRET_KEY=betasecretkey
+      - SECURITY_PASSWORD_SALT=betasalt
+      - LICENSE_KEY=PENG-BETA-XXXX-XXXX-XXXX-ABCD
+      - REDIS_PASSWORD=betaredis

@@ -1,0 +1,122 @@
+{{- if .Values.flaskBackend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "current.fullname" . }}-flask-backend
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "current.labels" . | nindent 4 }}
+    app.kubernetes.io/component: flask-backend
+spec:
+  replicas: {{ .Values.flaskBackend.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "current.flaskBackend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "current.flaskBackend.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: flask-backend
+        image: "{{ .Values.flaskBackend.image.repository }}:{{ .Values.flaskBackend.image.tag }}"
+        imagePullPolicy: {{ .Values.flaskBackend.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.flaskBackend.service.targetPort }}
+          protocol: TCP
+        env:
+        - name: FLASK_ENV
+          value: {{ .Values.flaskBackend.env.FLASK_ENV | default "production" | quote }}
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "current.fullname" . }}-secret
+              key: SECRET_KEY
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "current.fullname" . }}-secret
+              key: JWT_SECRET_KEY
+        - name: DB_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "current.fullname" . }}-config
+              key: DB_TYPE
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "current.fullname" . }}-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "current.fullname" . }}-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "current.fullname" . }}-config
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "current.fullname" . }}-secret
+              key: DB_USER
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "current.fullname" . }}-secret
+              key: DB_PASS
+        - name: REDIS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "current.fullname" . }}-config
+              key: REDIS_URL
+        - name: DEFAULT_ADMIN_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "current.fullname" . }}-secret
+              key: DEFAULT_ADMIN_EMAIL
+        - name: DEFAULT_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "current.fullname" . }}-secret
+              key: DEFAULT_ADMIN_PASSWORD
+        {{- if .Values.flaskBackend.env.DEBUG }}
+        - name: DEBUG
+          value: {{ .Values.flaskBackend.env.DEBUG | quote }}
+        {{- end }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.flaskBackend.healthCheck.path }}
+            port: http
+          initialDelaySeconds: {{ .Values.flaskBackend.healthCheck.initialDelaySeconds }}
+          periodSeconds: {{ .Values.flaskBackend.healthCheck.periodSeconds }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.flaskBackend.healthCheck.path }}
+            port: http
+          initialDelaySeconds: {{ .Values.flaskBackend.healthCheck.initialDelaySeconds }}
+          periodSeconds: {{ .Values.flaskBackend.healthCheck.periodSeconds }}
+        resources:
+          {{- toYaml .Values.flaskBackend.resources | nindent 10 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "current.fullname" . }}-flask-backend
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "current.labels" . | nindent 4 }}
+    app.kubernetes.io/component: flask-backend
+spec:
+  type: {{ .Values.flaskBackend.service.type }}
+  ports:
+  - port: {{ .Values.flaskBackend.service.port }}
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    {{- include "current.flaskBackend.selectorLabels" . | nindent 4 }}
+{{- end }}

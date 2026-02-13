@@ -1,0 +1,131 @@
+# Default values for current Helm chart
+
+# Flask Backend
+flaskBackend:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: ghcr.io/penguintechinc/current-flask-backend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 5002
+    targetPort: 5000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    FLASK_ENV: production
+    DB_TYPE: postgres
+    REDIS_URL: redis://current-redis-master:6379/0
+  healthCheck:
+    path: /healthz
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+# WebUI
+webui:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: ghcr.io/penguintechinc/current-webui
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 3008
+    targetPort: 3000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  env:
+    NODE_ENV: production
+    FLASK_API_URL: http://current-flask-backend:5002
+  healthCheck:
+    path: /healthz
+    initialDelaySeconds: 15
+    periodSeconds: 10
+
+# PostgreSQL (Bitnami Chart)
+postgresql:
+  enabled: true
+  auth:
+    username: app_user
+    password: changeme
+    database: app_db
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Redis (Bitnami Chart)
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: changeme
+  master:
+    persistence:
+      enabled: true
+      size: 2Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Ingress
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: current.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: webui
+        - path: /api
+          pathType: Prefix
+          service: flask-backend
+  tls:
+    - secretName: current-tls
+      hosts:
+        - current.example.com
+
+# Horizontal Pod Autoscaler
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Network Policy
+networkPolicy:
+  enabled: false
+  policyTypes:
+    - Ingress
+    - Egress
+
+# Storage Class
+storageClass: standard

@@ -1,0 +1,111 @@
+# Beta environment values (staging/pre-production)
+
+# Global namespace
+namespace: current-beta
+
+# Flask Backend
+flaskBackend:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: registry-dal2.penguintech.io/current-flask-backend
+    pullPolicy: Always
+    tag: "beta"
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    FLASK_ENV: production
+    DEBUG: "false"
+
+# WebUI
+webui:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: registry-dal2.penguintech.io/current-webui
+    pullPolicy: Always
+    tag: "beta"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  env:
+    NODE_ENV: production
+
+# PostgreSQL
+postgresql:
+  enabled: true
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: longhorn
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Redis
+redis:
+  enabled: true
+  master:
+    persistence:
+      enabled: true
+      size: 4Gi
+      storageClass: longhorn
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Ingress
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: current.penguintech.io
+      paths:
+        - path: /
+          pathType: Prefix
+          service: webui
+        - path: /api
+          pathType: Prefix
+          service: flask-backend
+  tls:
+    - secretName: current-beta-tls
+      hosts:
+        - current.penguintech.io
+
+# HPA
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Network Policy
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+
+# Storage Class
+storageClass: longhorn

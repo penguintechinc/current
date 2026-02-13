@@ -1,0 +1,81 @@
+# Alpha environment values (local development, microk8s)
+
+# Global namespace
+namespace: current-alpha
+
+# Flask Backend
+flaskBackend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: current-flask-backend
+    pullPolicy: Never  # Use local images
+    tag: "alpha"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  env:
+    FLASK_ENV: development
+    DEBUG: "true"
+
+# WebUI
+webui:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: current-webui
+    pullPolicy: Never  # Use local images
+    tag: "alpha"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+  env:
+    NODE_ENV: development
+
+# PostgreSQL
+postgresql:
+  enabled: true
+  primary:
+    persistence:
+      enabled: false  # No persistence in alpha
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Redis
+redis:
+  enabled: true
+  master:
+    persistence:
+      enabled: false  # No persistence in alpha
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+# Ingress
+ingress:
+  enabled: false  # No ingress in alpha
+
+# HPA
+hpa:
+  enabled: false  # No autoscaling in alpha
+
+# Network Policy
+networkPolicy:
+  enabled: false  # No network policies in alpha
